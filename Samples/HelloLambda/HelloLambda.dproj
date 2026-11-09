@@ -174,6 +174,8 @@
         <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.Interfaces.pas"/>
         <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.pas"/>
         <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.API.pas"/>
+        <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.API.Mock.pas"/>
+        <DCCReference Include="..\..\Source\AWSLambda4D.JsonProcessor.Handler.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
