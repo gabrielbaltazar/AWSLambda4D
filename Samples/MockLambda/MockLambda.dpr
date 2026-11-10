@@ -12,7 +12,10 @@ uses
   AWSLambda4D.Runtime.API in '..\..\Source\AWSLambda4D.Runtime.API.pas',
   AWSLambda4D.Runtime.API.Mock in '..\..\Source\AWSLambda4D.Runtime.API.Mock.pas',
   AWSLambda4D.JsonProcessor.Handler in '..\..\Source\AWSLambda4D.JsonProcessor.Handler.pas',
-  AWSLambda4D.Runtime.LocalServer in '..\..\Source\AWSLambda4D.Runtime.LocalServer.pas';
+  AWSLambda4D.Runtime.LocalServer in '..\..\Source\AWSLambda4D.Runtime.LocalServer.pas',
+  AWSLambda4D.HTTP.Types in '..\..\Source\AWSLambda4D.HTTP.Types.pas',
+  AWSLambda4D.HTTP.Adapter in '..\..\Source\AWSLambda4D.HTTP.Adapter.pas',
+  AWSLambda4D.Utils in '..\..\Source\AWSLambda4D.Utils.pas';
 
 var
   I: Integer;

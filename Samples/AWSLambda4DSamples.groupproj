@@ -3,6 +3,9 @@
         <ProjectGuid>{80078367-68B5-4DD9-B62F-4A163FEC3A85}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="HelloLambda\HelloLambda.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="MockLambda\MockLambda.dproj">
             <Dependencies/>
         </Projects>
@@ -17,6 +20,15 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="HelloLambda">
+        <MSBuild Projects="HelloLambda\HelloLambda.dproj"/>
+    </Target>
+    <Target Name="HelloLambda:Clean">
+        <MSBuild Projects="HelloLambda\HelloLambda.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="HelloLambda:Make">
+        <MSBuild Projects="HelloLambda\HelloLambda.dproj" Targets="Make"/>
+    </Target>
     <Target Name="MockLambda">
         <MSBuild Projects="MockLambda\MockLambda.dproj"/>
     </Target>
@@ -36,13 +48,13 @@
         <MSBuild Projects="LocalLambda\LocalLambda.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="MockLambda;LocalLambda"/>
+        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="MockLambda:Clean;LocalLambda:Clean"/>
+        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="MockLambda:Make;LocalLambda:Make"/>
+        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -26,7 +26,9 @@ type
     procedure SendError(const AContext: TAWSLambda4DContext; const AErrorType: string; const AErrorMessage: string);
   public
     constructor Create; overload;
+    class function New: IAWSLambda4DRuntimeAPI; overload;
     constructor Create(const ABaseUrl: string); overload;
+    class function New(const ABaseUrl: string): IAWSLambda4DRuntimeAPI; overload;
     destructor Destroy; override;
   end;
 
@@ -126,6 +128,16 @@ begin
       Exit;
     end;
   end;
+end;
+
+class function TAWSLambda4DRuntimeAPI.New(const ABaseUrl: string): IAWSLambda4DRuntimeAPI;
+begin
+  Result := Self.Create(ABaseUrl);
+end;
+
+class function TAWSLambda4DRuntimeAPI.New: IAWSLambda4DRuntimeAPI;
+begin
+  Result := Self.Create;
 end;
 
 function TAWSLambda4DRuntimeAPI.NextInvocation(out AContext: TAWSLambda4DContext): TAWSLambda4DRequest;

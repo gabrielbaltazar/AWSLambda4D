@@ -1,27 +1,16 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{862EC2E6-40DD-4601-904A-FBC44ECA755B}</ProjectGuid>
+        <ProjectGuid>{1B4C3ECD-DE1B-4CC3-A2B5-09B99D445914}</ProjectGuid>
         <ProjectVersion>20.5</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
-        <ProjectName Condition="'$(ProjectName)'==''">HelloLambda</ProjectName>
-        <TargetedPlatforms>3</TargetedPlatforms>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Linux64</Platform>
+        <TargetedPlatforms>131</TargetedPlatforms>
         <AppType>Console</AppType>
         <MainSource>HelloLambda.dpr</MainSource>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
-        <Base_Android>true</Base_Android>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Base)'=='true') or '$(Base_Android64)'!=''">
-        <Base_Android64>true</Base_Android64>
-        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Linux64' and '$(Base)'=='true') or '$(Base_Linux64)'!=''">
@@ -50,14 +39,20 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
+        <Cfg_1_Win64>true</Cfg_1_Win64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_DcuOutput>..\..\Source\Dcu</DCC_DcuOutput>
+        <DCC_ExeOutput>.\Bin</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
@@ -65,64 +60,9 @@
         <DCC_K>false</DCC_K>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>HelloLambda</SanitizedProjectName>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Android)'!=''">
-        <Android_LauncherIcon36>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png</Android_LauncherIcon36>
-        <Android_LauncherIcon48>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png</Android_LauncherIcon48>
-        <Android_LauncherIcon72>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png</Android_LauncherIcon72>
-        <Android_LauncherIcon96>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png</Android_LauncherIcon96>
-        <Android_LauncherIcon144>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png</Android_LauncherIcon144>
-        <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
-        <Android_SplashImage426>$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png</Android_SplashImage426>
-        <Android_SplashImage470>$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png</Android_SplashImage470>
-        <Android_SplashImage640>$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png</Android_SplashImage640>
-        <Android_SplashImage960>$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png</Android_SplashImage960>
-        <IncludeAndroid_AdaptiveIcon>true</IncludeAndroid_AdaptiveIcon>
-        <IncludeAndroid_VectorizedSplash>true</IncludeAndroid_VectorizedSplash>
-        <Android_AdaptiveIconMonochrome>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Monochrome.xml</Android_AdaptiveIconMonochrome>
-        <Android_AdaptiveIconForeground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Foreground.xml</Android_AdaptiveIconForeground>
-        <Android_AdaptiveIconBackground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Background.xml</Android_AdaptiveIconBackground>
-        <Android_VectorizedSplash>$(BDS)\bin\Artwork\Android\FM_VectorizedSplash.xml</Android_VectorizedSplash>
-        <Android_VectorizedSplashDark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashDark.xml</Android_VectorizedSplashDark>
-        <Android_VectorizedSplashV31>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31.xml</Android_VectorizedSplashV31>
-        <Android_VectorizedSplashV31Dark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31Dark.xml</Android_VectorizedSplashV31Dark>
-        <Android_NotificationIcon24>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png</Android_NotificationIcon24>
-        <Android_NotificationIcon36>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png</Android_NotificationIcon36>
-        <Android_NotificationIcon48>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png</Android_NotificationIcon48>
-        <Android_NotificationIcon72>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png</Android_NotificationIcon72>
-        <Android_NotificationIcon96>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png</Android_NotificationIcon96>
-        <IncludeAndroid_NotificationAccentColor>false</IncludeAndroid_NotificationAccentColor>
-        <IncludeAndroid_VectorizedNotificationIcon>true</IncludeAndroid_VectorizedNotificationIcon>
-        <Android_VectorizedNotificationIcon>$(BDS)\bin\Artwork\Android\FM_VectorizedNotificationIcon.xml</Android_VectorizedNotificationIcon>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Android64)'!=''">
-        <Android_LauncherIcon36>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png</Android_LauncherIcon36>
-        <Android_LauncherIcon48>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png</Android_LauncherIcon48>
-        <Android_LauncherIcon72>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png</Android_LauncherIcon72>
-        <Android_LauncherIcon96>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png</Android_LauncherIcon96>
-        <Android_LauncherIcon144>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png</Android_LauncherIcon144>
-        <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
-        <Android_SplashImage426>$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png</Android_SplashImage426>
-        <Android_SplashImage470>$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png</Android_SplashImage470>
-        <Android_SplashImage640>$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png</Android_SplashImage640>
-        <Android_SplashImage960>$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png</Android_SplashImage960>
-        <IncludeAndroid_AdaptiveIcon>true</IncludeAndroid_AdaptiveIcon>
-        <IncludeAndroid_VectorizedSplash>true</IncludeAndroid_VectorizedSplash>
-        <Android_AdaptiveIconMonochrome>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Monochrome.xml</Android_AdaptiveIconMonochrome>
-        <Android_AdaptiveIconForeground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Foreground.xml</Android_AdaptiveIconForeground>
-        <Android_AdaptiveIconBackground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Background.xml</Android_AdaptiveIconBackground>
-        <Android_VectorizedSplash>$(BDS)\bin\Artwork\Android\FM_VectorizedSplash.xml</Android_VectorizedSplash>
-        <Android_VectorizedSplashDark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashDark.xml</Android_VectorizedSplashDark>
-        <Android_VectorizedSplashV31>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31.xml</Android_VectorizedSplashV31>
-        <Android_VectorizedSplashV31Dark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31Dark.xml</Android_VectorizedSplashV31Dark>
-        <Android_NotificationIcon24>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png</Android_NotificationIcon24>
-        <Android_NotificationIcon36>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png</Android_NotificationIcon36>
-        <Android_NotificationIcon48>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png</Android_NotificationIcon48>
-        <Android_NotificationIcon72>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png</Android_NotificationIcon72>
-        <Android_NotificationIcon96>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png</Android_NotificationIcon96>
-        <IncludeAndroid_NotificationAccentColor>false</IncludeAndroid_NotificationAccentColor>
-        <IncludeAndroid_VectorizedNotificationIcon>true</IncludeAndroid_VectorizedNotificationIcon>
-        <Android_VectorizedNotificationIcon>$(BDS)\bin\Artwork\Android\FM_VectorizedNotificationIcon.xml</Android_VectorizedNotificationIcon>
+        <DCC_UnitSearchPath>..\..\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <VerInfo_Locale>1046</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Linux64)'!=''">
         <DCC_UsePackage>DataSnapServer;fmx;emshosting;DbxCommonDriver;bindengine;FireDACCommonODBC;emsclient;FireDACCommonDriver;IndyProtocols;dbxcds;emsedge;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;soapmidas;fmxFireDAC;dbexpress;FireDACInfxDriver;inet;DataSnapCommon;dbrtl;FireDACOracleDriver;CustomIPTransport;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;DataSnapConnectors;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;dsnapxml;DataSnapClient;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;xmlrtl;dsnap;CloudService;FireDACDb2Driver;DataSnapNativeClient;DatasnapConnectorsFreePascal;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -160,6 +100,11 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>(None)</Manifest_File>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -170,13 +115,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\..\Source\AWSLambda4D.Classes.pas"/>
-        <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.Interfaces.pas"/>
-        <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.pas"/>
-        <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.API.pas"/>
-        <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.API.Mock.pas"/>
-        <DCCReference Include="..\..\Source\AWSLambda4D.JsonProcessor.Handler.pas"/>
-        <DCCReference Include="..\..\Source\AWSLambda4D.Runtime.LocalServer.pas"/>
+        <DCCReference Include="HelloLambda.Handle.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -214,13 +153,13 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win64\Debug\HelloLambda.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Bin\HelloLambda.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>HelloLambda.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win64\Debug\HelloLambda.rsm" Configuration="Debug" Class="DebugSymbols">
+                <DeployFile LocalName="Bin\HelloLambda.rsm" Configuration="Debug" Class="DebugSymbols">
                     <Platform Name="Win64">
                         <RemoteName>HelloLambda.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -1190,9 +1129,7 @@
                 <ProjectRoot Platform="WinARM64EC" Name="$(PROJECTNAME)"/>
             </Deployment>
             <Platforms>
-                <Platform value="Android">False</Platform>
-                <Platform value="Android64">False</Platform>
-                <Platform value="Linux64">False</Platform>
+                <Platform value="Linux64">True</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
             </Platforms>
