@@ -11,21 +11,21 @@ uses
   AWSLambda4D.HTTP.Types;
 
 type
-  THellLambdaHandle = class(TInterfacedObject, IAWSLambda4DHandler)
+  THelloLambdaHandle = class(TInterfacedObject, IAWSLambda4DHandler)
   protected
     function Handle(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
   end;
 
-  THellLambdaHTTPHandle = class(TInterfacedObject, IAWSLambda4DHTTPHandler)
+  THelloLambdaHTTPHandle = class(TInterfacedObject, IAWSLambda4DHTTPHandler)
   protected
     function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
   end;
 
 implementation
 
-{ THellLambdaHandle }
+{ THelloLambdaHandle }
 
-function THellLambdaHandle.Handle(const ARequest: TAWSLambda4DRequest;
+function THelloLambdaHandle.Handle(const ARequest: TAWSLambda4DRequest;
   const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
 var
   LJSON: TJSONObject;
@@ -46,9 +46,9 @@ begin
   end;
 end;
 
-{ THellLambdaHTTPHandle }
+{ THelloLambdaHTTPHandle }
 
-function THellLambdaHTTPHandle.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+function THelloLambdaHTTPHandle.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
 var
   LJSON: TJSONObject;
   LNowUTC: TDateTime;

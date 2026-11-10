@@ -5,9 +5,12 @@ interface
 uses
   System.Generics.Collections,
   System.SysUtils,
-  System.JSON;
+  System.JSON,
+  AWSLambda4D.HTTP.Types;
 
 procedure AddJsonObjectValues(const ASource: TJSONObject; const ADestination: TDictionary<string, string>);
+procedure AddJsonValues(const ASource: TJSONObject; const ADestination: TAWSLambda4DHTTPValues;
+  const AOnlyMissing: Boolean = False);
 function JsonBoolean(const AObject: TJSONObject; const AName: string): Boolean;
 function JsonString(const AObject: TJSONObject; const AName: string; const ADefault: string = ''): string;
 
@@ -42,6 +45,32 @@ begin
   end;
 end;
 
+procedure AddJsonValues(const ASource: TJSONObject; const ADestination: TAWSLambda4DHTTPValues;
+  const AOnlyMissing: Boolean = False);
+var
+  LPair: TJSONPair;
+  LArray: TJSONArray;
+  I: Integer;
+begin
+  if ASource = nil then
+    Exit;
+
+  for LPair in ASource do
+  begin
+    if AOnlyMissing and ADestination.Contains(LPair.JsonString.Value) then
+      Continue;
+
+    if LPair.JsonValue is TJSONArray then
+    begin
+      LArray := TJSONArray(LPair.JsonValue);
+      for I := 0 to LArray.Count - 1 do
+        ADestination.Add(LPair.JsonString.Value, LArray.Items[I].Value);
+    end
+    else
+      ADestination.Add(LPair.JsonString.Value, LPair.JsonValue.Value);
+  end;
+end;
+
 function JsonBoolean(const AObject: TJSONObject; const AName: string): Boolean;
 begin
   Result := SameText(JsonString(AObject, AName), 'true');
@@ -56,13 +85,8 @@ begin
     Exit;
 
   LValue := AObject.GetValue(AName);
-  if LValue = nil then
-    Exit;
-
-  if LValue is TJSONString then
-    Result := LValue.Value
-  else
-    Result := LValue.ToJSON;
+  if LValue <> nil then
+    Result := LValue.Value;
 end;
 
 end.
