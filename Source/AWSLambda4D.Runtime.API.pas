@@ -25,7 +25,8 @@ type
     procedure SendResponse(const AContext: TAWSLambda4DContext; const AResponse: TAWSLambda4DResponse);
     procedure SendError(const AContext: TAWSLambda4DContext; const AErrorType: string; const AErrorMessage: string);
   public
-    constructor Create;
+    constructor Create; overload;
+    constructor Create(const ABaseUrl: string); overload;
     destructor Destroy; override;
   end;
 
@@ -81,6 +82,18 @@ begin
     raise ELambdaRuntimeAPI.CreateFmt('AWS Lambda Runtime API error. Operation: %s. HTTP: %d. Body: %s',
       [AOperation, AResponse.StatusCode, LBody]);
   end;
+end;
+
+constructor TAWSLambda4DRuntimeAPI.Create(const ABaseUrl: string);
+begin
+  if ABaseUrl = '' then
+    raise ELambdaRuntimeAPI.Create('Lambda Runtime API address is required.');
+
+  FBaseURL := ABaseURL;
+  if not FBaseURL.StartsWith('http://') then
+    FBaseURL := 'http://' + FBaseURL;
+  FBaseURL := FBaseURL.TrimRight(['/']);
+  FHTTPClient := THTTPClient.Create;
 end;
 
 constructor TAWSLambda4DRuntimeAPI.Create;

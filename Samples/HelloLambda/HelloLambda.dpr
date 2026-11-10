@@ -11,7 +11,8 @@ uses
   AWSLambda4D.Runtime in '..\..\Source\AWSLambda4D.Runtime.pas',
   AWSLambda4D.Runtime.API in '..\..\Source\AWSLambda4D.Runtime.API.pas',
   AWSLambda4D.Runtime.API.Mock in '..\..\Source\AWSLambda4D.Runtime.API.Mock.pas',
-  AWSLambda4D.JsonProcessor.Handler in '..\..\Source\AWSLambda4D.JsonProcessor.Handler.pas';
+  AWSLambda4D.JsonProcessor.Handler in '..\..\Source\AWSLambda4D.JsonProcessor.Handler.pas',
+  AWSLambda4D.Runtime.LocalServer in '..\..\Source\AWSLambda4D.Runtime.LocalServer.pas';
 
 var
   I: Integer;

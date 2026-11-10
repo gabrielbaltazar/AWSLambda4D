@@ -15,7 +15,7 @@ type
   public
     constructor Create(const AAPI: IAWSLambda4DRuntimeAPI);
 
-    procedure Run(const AHandler: IAWSLambda4DHandler);
+    procedure Run(const AHandler: IAWSLambda4DHandler; const AMaxInvocations: Integer = 0);
   end;
 
 implementation
@@ -75,14 +75,23 @@ begin
   end;
 end;
 
-procedure TAWSLambda4DRuntime.Run(const AHandler: IAWSLambda4DHandler);
+procedure TAWSLambda4DRuntime.Run(const AHandler: IAWSLambda4DHandler; const AMaxInvocations: Integer = 0);
+var
+  LCount: Integer;
 begin
   if AHandler = nil then
     raise ELambdaRuntimeAPI.Create('Lambda Handler implementation is required.');
 
+  if AMaxInvocations < 0 then
+    raise ELambdaRuntimeAPI.Create('Maximum invocations cannot be negative.');
+
+  LCount := 0;
   // Loop principal do Runtime.
-  while True do
+  while (AMaxInvocations = 0) or (LCount < AMaxInvocations) do
+  begin
     ProcessInvocation(AHandler);
+    Inc(LCount);
+  end;
 end;
 
 end.
