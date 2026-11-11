@@ -17,9 +17,8 @@ uses
 var
   LServer: TAWSLambda4DRuntimeLocalServer;
   LAPI: IAWSLambda4DRuntimeAPI;
-  LHandler: IAWSLambda4DHTTPHandler;
+  LHandler: IAWSLambda4DHandler;
   LRuntime: TAWSLambda4DRuntime;
-  LAdapter: IAWSLambda4DHandler;
 begin
 {$IFDEF MSWINDOWS}
   IsConsole := False;
@@ -31,13 +30,11 @@ begin
     LServer.Start;
     LServer.AddInvocation('{"name": "Gabriel"}');
     LAPI := TAWSLambda4DRuntimeAPI.New('127.0.0.1:9001');
-//    LAPI := TAWSLambda4DRuntimeAPI.New;
 
-    LHandler := THelloLambdaHTTPHandle.Create;
-    LAdapter := TLambdaHttpAdapter.Create(LHandler);
+    LHandler := THelloLambdaHandle.Create;
     LRuntime := TAWSLambda4DRuntime.Create(LAPI);
     try
-      LRuntime.Run(LAdapter, 1);
+      LRuntime.Run(LHandler, 1);
     finally
       LRuntime.Free;
     end;

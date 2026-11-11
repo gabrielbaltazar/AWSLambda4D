@@ -12,6 +12,12 @@
         <Projects Include="LocalLambda\LocalLambda.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="HTTPLambda\HTTPLambda.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="HTTPSimulator\HTTPSimulator.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -47,14 +53,32 @@
     <Target Name="LocalLambda:Make">
         <MSBuild Projects="LocalLambda\LocalLambda.dproj" Targets="Make"/>
     </Target>
+    <Target Name="HTTPLambda">
+        <MSBuild Projects="HTTPLambda\HTTPLambda.dproj"/>
+    </Target>
+    <Target Name="HTTPLambda:Clean">
+        <MSBuild Projects="HTTPLambda\HTTPLambda.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="HTTPLambda:Make">
+        <MSBuild Projects="HTTPLambda\HTTPLambda.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="HTTPSimulator">
+        <MSBuild Projects="HTTPSimulator\HTTPSimulator.dproj"/>
+    </Target>
+    <Target Name="HTTPSimulator:Clean">
+        <MSBuild Projects="HTTPSimulator\HTTPSimulator.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="HTTPSimulator:Make">
+        <MSBuild Projects="HTTPSimulator\HTTPSimulator.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda"/>
+        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda;HTTPLambda;HTTPSimulator"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean"/>
+        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean;HTTPLambda:Clean;HTTPSimulator:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make"/>
+        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make;HTTPLambda:Make;HTTPSimulator:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

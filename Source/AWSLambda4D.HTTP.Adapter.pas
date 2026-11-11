@@ -12,7 +12,7 @@ uses
   AWSLambda4D.HTTP.Types;
 
 type
-  TLambdaHttpAdapter = class(TInterfacedObject, IAWSLambda4DHandler)
+  TAWSLambda4DHTTPAdapter = class(TInterfacedObject, IAWSLambda4DHandler)
   private
     FHandler: IAWSLambda4DHTTPHandler;
 
@@ -32,16 +32,16 @@ implementation
 uses
   AWSLambda4D.Utils;
 
-{ TLambdaHttpAdapter }
+{ TAWSLambda4DHTTPAdapter }
 
-constructor TLambdaHttpAdapter.Create(const AHandler: IAWSLambda4DHTTPHandler);
+constructor TAWSLambda4DHTTPAdapter.Create(const AHandler: IAWSLambda4DHTTPHandler);
 begin
   if AHandler = nil then
     raise Exception.Create('HTTP Handler não informado.');
   FHandler := AHandler;
 end;
 
-function TLambdaHttpAdapter.Handle(const ARequest: TAWSLambda4DRequest;
+function TAWSLambda4DHTTPAdapter.Handle(const ARequest: TAWSLambda4DRequest;
   const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
 var
   LHttpRequest: TAWSLambda4DHTTPRequest;
@@ -78,7 +78,7 @@ begin
   end;
 end;
 
-procedure TLambdaHttpAdapter.ParseQueryString(const ARawQueryString: string; const AParams: TAWSLambda4DHTTPValues);
+procedure TAWSLambda4DHTTPAdapter.ParseQueryString(const ARawQueryString: string; const AParams: TAWSLambda4DHTTPValues);
 var
   LQuery: string;
   LPair: string;
@@ -125,7 +125,7 @@ begin
   end;
 end;
 
-function TLambdaHttpAdapter.ParseRequest(const AEventJSON: string;
+function TAWSLambda4DHTTPAdapter.ParseRequest(const AEventJSON: string;
   out APayloadVersion: TAWSLambda4DHttpPayloadVersion): TAWSLambda4DHTTPRequest;
 var
   LJSONValue: TJSONValue;
@@ -232,7 +232,7 @@ begin
   end;
 end;
 
-function TLambdaHttpAdapter.SerializeResponse(const AResponse: TAWSLambda4DHTTPResponse;
+function TAWSLambda4DHTTPAdapter.SerializeResponse(const AResponse: TAWSLambda4DHTTPResponse;
   const APayloadVersion: TAWSLambda4DHttpPayloadVersion): string;
 var
   LJSON: TJSONObject;
