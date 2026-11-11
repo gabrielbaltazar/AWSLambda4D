@@ -23,6 +23,7 @@ type
       const APayloadVersion: TAWSLambda4DHttpPayloadVersion): string;
   public
     constructor Create(const AHandler: IAWSLambda4DHTTPHandler);
+    class function New(const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHandler;
 
     function Handle(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
   end;
@@ -76,6 +77,11 @@ begin
     LHttpResponse.Free;
     LHttpRequest.Free;
   end;
+end;
+
+class function TAWSLambda4DHTTPAdapter.New(const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHandler;
+begin
+  Result := Self.Create(AHandler);
 end;
 
 procedure TAWSLambda4DHTTPAdapter.ParseQueryString(const ARawQueryString: string; const AParams: TAWSLambda4DHTTPValues);
