@@ -21,6 +21,9 @@
         <Projects Include="APIHTTPLambda\APIHTTPLambda.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="APIHTTPRouterLambda\APIHTTPRouterLambda.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -83,14 +86,23 @@
     <Target Name="APIHTTPLambda:Make">
         <MSBuild Projects="APIHTTPLambda\APIHTTPLambda.dproj" Targets="Make"/>
     </Target>
+    <Target Name="APIHTTPRouterLambda">
+        <MSBuild Projects="APIHTTPRouterLambda\APIHTTPRouterLambda.dproj"/>
+    </Target>
+    <Target Name="APIHTTPRouterLambda:Clean">
+        <MSBuild Projects="APIHTTPRouterLambda\APIHTTPRouterLambda.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="APIHTTPRouterLambda:Make">
+        <MSBuild Projects="APIHTTPRouterLambda\APIHTTPRouterLambda.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda;HTTPLambda;HTTPSimulator;APIHTTPLambda"/>
+        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda;HTTPLambda;HTTPSimulator;APIHTTPLambda;APIHTTPRouterLambda"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean;HTTPLambda:Clean;HTTPSimulator:Clean;APIHTTPLambda:Clean"/>
+        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean;HTTPLambda:Clean;HTTPSimulator:Clean;APIHTTPLambda:Clean;APIHTTPRouterLambda:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make;HTTPLambda:Make;HTTPSimulator:Make;APIHTTPLambda:Make"/>
+        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make;HTTPLambda:Make;HTTPSimulator:Make;APIHTTPLambda:Make;APIHTTPRouterLambda:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

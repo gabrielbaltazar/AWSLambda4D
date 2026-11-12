@@ -21,6 +21,7 @@ type
     FIsBase64Encoded: Boolean;
     FQueryParams: TAWSLambda4DHTTPValues;
     FCookies: TList<string>;
+    FPathParams: TAWSLambda4DHTTPValues;
   public
     constructor Create;
     destructor Destroy; override;
@@ -38,6 +39,7 @@ type
     property RawQueryString: string read FRawQueryString write FRawQueryString;
     property Headers: TAWSLambda4DHTTPValues read FHeaders;
     property QueryParams: TAWSLambda4DHTTPValues read FQueryParams;
+    property PathParams: TAWSLambda4DHTTPValues read FPathParams;
     property Cookies: TList<string> read FCookies;
     property Body: TBytes read FBody write FBody;
     property IsBase64Encoded: Boolean read FIsBase64Encoded write FIsBase64Encoded;
@@ -66,6 +68,17 @@ type
   IAWSLambda4DHTTPHandler = interface
     ['{4A218098-9557-4D97-85F2-CAA6052FC9B1}']
     function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+  end;
+
+  IAWSLambda4DHTTPRouter = interface(IAWSLambda4DHTTPHandler)
+    ['{F3857F4E-BCBD-4EA0-93E9-FD3E708C60D8}']
+    function Add(const AMethod: string; const APath: string;
+      const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
+    function Get(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
+    function Post(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
+    function Put(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
+    function Delete(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
+    function Patch(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
   end;
 
   TAWSLambda4DHTTPValues = class
@@ -121,6 +134,7 @@ constructor TAWSLambda4DHTTPRequest.Create;
 begin
   FHeaders := TAWSLambda4DHTTPValues.Create(True);
   FQueryParams := TAWSLambda4DHTTPValues.Create(False);
+  FPathParams := TAWSLambda4DHTTPValues.Create(False);
   FCookies := TList<string>.Create;
 end;
 
@@ -129,6 +143,7 @@ begin
   FHeaders.Free;
   FQueryParams.Free;
   FCookies.Free;
+  FPathParams.Free;
   inherited;
 end;
 

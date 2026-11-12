@@ -15,7 +15,9 @@ uses
   AWSLambda4D.Runtime.LocalServer in '..\..\Source\AWSLambda4D.Runtime.LocalServer.pas',
   AWSLambda4D.HTTP.Types in '..\..\Source\AWSLambda4D.HTTP.Types.pas',
   AWSLambda4D.HTTP.Adapter in '..\..\Source\AWSLambda4D.HTTP.Adapter.pas',
-  AWSLambda4D.Utils in '..\..\Source\AWSLambda4D.Utils.pas';
+  AWSLambda4D.Utils in '..\..\Source\AWSLambda4D.Utils.pas',
+  AWSLambda4D.HTTP.RouteMatcher in '..\..\Source\AWSLambda4D.HTTP.RouteMatcher.pas',
+  AWSLambda4D.HTTP.Router in '..\..\Source\AWSLambda4D.HTTP.Router.pas';
 
 var
   I: Integer;
