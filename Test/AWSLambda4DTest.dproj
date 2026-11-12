@@ -100,6 +100,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Source\AWSLambda4D.HTTP.Router.Test.pas"/>
+        <DCCReference Include="Source\AWSLambda4D.HTTP.Types.Test.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

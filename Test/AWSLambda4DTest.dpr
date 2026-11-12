@@ -17,7 +17,8 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
-  AWSLambda4D.HTTP.Router.Test in 'Source\AWSLambda4D.HTTP.Router.Test.pas';
+  AWSLambda4D.HTTP.Router.Test in 'Source\AWSLambda4D.HTTP.Router.Test.pas',
+  AWSLambda4D.HTTP.Types.Test in 'Source\AWSLambda4D.HTTP.Types.Test.pas';
 
 { keep comment here to protect the following conditional from being removed by the IDE when adding a unit }
 {$IFNDEF TESTINSIGHT}

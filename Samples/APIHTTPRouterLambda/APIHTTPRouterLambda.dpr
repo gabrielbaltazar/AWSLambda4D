@@ -19,7 +19,8 @@ begin
   LPing := TPingHandler.New;
 
   LRouter.Get('/ping', LPing)
-    .Get('/ping/:id', LPing);
+    .Get('/ping/:id', LPing)
+    .Get('/ping/:id/:numero', LPing);
 
   TAWSLambda4Runner.Run(LRouter);
 end.

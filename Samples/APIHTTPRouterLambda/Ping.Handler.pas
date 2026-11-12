@@ -23,11 +23,13 @@ uses
 function TPingHandler.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
 var
   LId: string;
+  LNumero: Integer;
 begin
-  LId := ARequest.PathParams.First('id');
+  LId := ARequest.PathParams.Field('id').AsString;
+  LNumero := ARequest.PathParams.Field('numero').AsInteger;
   Result := TAWSLambda4DHTTPResponse.Create;
   Result.StatusCode := 200;
-  Result.SetBody(Format('{"message":"pong %s"}', [LId]));
+  Result.SetBody(Format('{"message":"pong %s %d"}', [LId, LNumero]));
 end;
 
 class function TPingHandler.New: IAWSLambda4DHTTPHandler;

@@ -11,6 +11,45 @@ type
 
   TAWSLambda4DHTTPValues = class;
 
+  // Valor de um parametro (path, query, header) com leitura tipada.
+  // AsXxx levanta EConvertError se o valor nao existir ou for invalido;
+  // AsXxx(ADefault) devolve ADefault nesses casos; TryAsXxx devolve False.
+  // Datas e horas seguem o formato ISO 8601 e sao devolvidas em UTC
+  // quando o texto informa fuso horario (Z ou +hh:mm).
+  TAWSLambda4DHTTPField = record
+  private
+    FName: string;
+    FValue: string;
+    FExists: Boolean;
+    procedure RaiseConvertError(const ATypeName: string);
+  public
+    constructor Create(const AName, AValue: string; const AExists: Boolean);
+
+    function Exists: Boolean;
+
+    function AsString: string;
+
+    function TryAsInteger(out AValue: Integer): Boolean;
+    function AsInteger: Integer; overload;
+    function AsInteger(const ADefault: Integer): Integer; overload;
+
+    function TryAsFloat(out AValue: Double): Boolean;
+    function AsFloat: Double; overload;
+    function AsFloat(const ADefault: Double): Double; overload;
+
+    function TryAsCurrency(out AValue: Currency): Boolean;
+    function AsCurrency: Currency; overload;
+    function AsCurrency(const ADefault: Currency): Currency; overload;
+
+    function TryAsDateTime(out AValue: TDateTime): Boolean;
+    function AsDateTime: TDateTime; overload;
+    function AsDateTime(const ADefault: TDateTime): TDateTime; overload;
+
+    function TryAsDate(out AValue: TDateTime): Boolean;
+    function AsDate: TDateTime; overload;
+    function AsDate(const ADefault: TDateTime): TDateTime; overload;
+  end;
+
   TAWSLambda4DHTTPRequest = class
   private
     FPath: string;
@@ -95,13 +134,138 @@ type
     function ValueCount(const AName: string): Integer;
     function Value(const AName: string; const AIndex: Integer = 0): string;
     function First(const AName: string): string;
+    function Field(const AName: string; const AIndex: Integer = 0): TAWSLambda4DHTTPField;
     function Names: TArray<string>;
   end;
 
 implementation
 
 uses
-  System.Generics.Defaults;
+  System.Generics.Defaults,
+  System.DateUtils;
+
+{ TAWSLambda4DHTTPField }
+
+constructor TAWSLambda4DHTTPField.Create(const AName, AValue: string; const AExists: Boolean);
+begin
+  FName := AName;
+  FValue := AValue;
+  FExists := AExists;
+end;
+
+procedure TAWSLambda4DHTTPField.RaiseConvertError(const ATypeName: string);
+begin
+  if not FExists then
+    raise EConvertError.CreateFmt('Parameter ''%s'' was not found.', [FName]);
+
+  raise EConvertError.CreateFmt('Parameter ''%s'' has value ''%s'', which is not a valid %s.',
+    [FName, FValue, ATypeName]);
+end;
+
+function TAWSLambda4DHTTPField.Exists: Boolean;
+begin
+  Result := FExists;
+end;
+
+function TAWSLambda4DHTTPField.AsString: string;
+begin
+  Result := FValue;
+end;
+
+function TAWSLambda4DHTTPField.TryAsInteger(out AValue: Integer): Boolean;
+begin
+  Result := FExists and TryStrToInt(FValue, AValue);
+  if not Result then
+    AValue := 0;
+end;
+
+function TAWSLambda4DHTTPField.AsInteger: Integer;
+begin
+  if not TryAsInteger(Result) then
+    RaiseConvertError('Integer');
+end;
+
+function TAWSLambda4DHTTPField.AsInteger(const ADefault: Integer): Integer;
+begin
+  if not TryAsInteger(Result) then
+    Result := ADefault;
+end;
+
+function TAWSLambda4DHTTPField.TryAsFloat(out AValue: Double): Boolean;
+begin
+  Result := FExists and TryStrToFloat(FValue, AValue, TFormatSettings.Invariant);
+  if not Result then
+    AValue := 0;
+end;
+
+function TAWSLambda4DHTTPField.AsFloat: Double;
+begin
+  if not TryAsFloat(Result) then
+    RaiseConvertError('Float');
+end;
+
+function TAWSLambda4DHTTPField.AsFloat(const ADefault: Double): Double;
+begin
+  if not TryAsFloat(Result) then
+    Result := ADefault;
+end;
+
+function TAWSLambda4DHTTPField.TryAsCurrency(out AValue: Currency): Boolean;
+begin
+  Result := FExists and TryStrToCurr(FValue, AValue, TFormatSettings.Invariant);
+  if not Result then
+    AValue := 0;
+end;
+
+function TAWSLambda4DHTTPField.AsCurrency: Currency;
+begin
+  if not TryAsCurrency(Result) then
+    RaiseConvertError('Currency');
+end;
+
+function TAWSLambda4DHTTPField.AsCurrency(const ADefault: Currency): Currency;
+begin
+  if not TryAsCurrency(Result) then
+    Result := ADefault;
+end;
+
+function TAWSLambda4DHTTPField.TryAsDateTime(out AValue: TDateTime): Boolean;
+begin
+  Result := FExists and (not FValue.IsEmpty) and TryISO8601ToDate(FValue, AValue, True);
+  if not Result then
+    AValue := 0;
+end;
+
+function TAWSLambda4DHTTPField.AsDateTime: TDateTime;
+begin
+  if not TryAsDateTime(Result) then
+    RaiseConvertError('ISO 8601 date/time');
+end;
+
+function TAWSLambda4DHTTPField.AsDateTime(const ADefault: TDateTime): TDateTime;
+begin
+  if not TryAsDateTime(Result) then
+    Result := ADefault;
+end;
+
+function TAWSLambda4DHTTPField.TryAsDate(out AValue: TDateTime): Boolean;
+begin
+  Result := TryAsDateTime(AValue);
+  if Result then
+    AValue := DateOf(AValue);
+end;
+
+function TAWSLambda4DHTTPField.AsDate: TDateTime;
+begin
+  if not TryAsDate(Result) then
+    RaiseConvertError('ISO 8601 date');
+end;
+
+function TAWSLambda4DHTTPField.AsDate(const ADefault: TDateTime): TDateTime;
+begin
+  if not TryAsDate(Result) then
+    Result := ADefault;
+end;
 
 { TAWSLambda4DHTTPResponse }
 
@@ -222,6 +386,12 @@ end;
 function TAWSLambda4DHTTPValues.First(const AName: string): string;
 begin
   Result := Value(AName, 0);
+end;
+
+function TAWSLambda4DHTTPValues.Field(const AName: string; const AIndex: Integer): TAWSLambda4DHTTPField;
+begin
+  Result := TAWSLambda4DHTTPField.Create(AName, Value(AName, AIndex),
+    (AIndex >= 0) and (AIndex < ValueCount(AName)));
 end;
 
 function TAWSLambda4DHTTPValues.Names: TArray<string>;
