@@ -50,6 +50,8 @@ implementation
 uses
   System.JSON;
 
+{ TAWSLambda4DHTTPRoute }
+
 constructor TAWSLambda4DHTTPRoute.Create(const AMethod: string; const APath: string;
   const AHandler: IAWSLambda4DHTTPHandler);
 begin
@@ -59,6 +61,8 @@ begin
   FHandler := AHandler;
   FSpecificity := TAWSLambda4DHTTPRouteMatcher.GetSpecificity(APath);
 end;
+
+{ TAWSLambda4DHTTPRouter }
 
 constructor TAWSLambda4DHTTPRouter.Create;
 begin
@@ -80,16 +84,21 @@ begin
   if AHandler = nil then
     raise EArgumentNilException.Create('AHandler');
 
-  if APath = '' then
+  if AMethod.Trim.IsEmpty then
+    raise EArgumentException.Create('HTTP method cannot be empty');
+
+  if APath.Trim.IsEmpty then
     raise EArgumentException.Create('Route path cannot be empty');
 
   for LRoute in FRoutes do
   begin
-    if (LRoute.Method = UpperCase(AMethod)) and SameStr(LRoute.Path, APath) then
+    // Método e caminho são comparados sem diferenciar
+    // maiúsculas e minúsculas.
+    if SameText(LRoute.Method, AMethod) and SameText(LRoute.Path, APath) then
       raise EArgumentException.CreateFmt('Route already registered: %s %s', [AMethod, APath]);
   end;
 
-  FRoutes.Add(TAWSLambda4DHTTPRoute.Create(AMethod, APath, AHandler));
+  FRoutes.Add(TAWSLambda4DHTTPRoute.Create(UpperCase(AMethod.Trim), APath, AHandler));
 end;
 
 function TAWSLambda4DHTTPRouter.Add(const AMethod: string; const APath: string;
@@ -168,43 +177,49 @@ var
   LBestRoute: TAWSLambda4DHTTPRoute;
   LPathMatched: Boolean;
   LBestSpecificity: Integer;
-  LMethod: string;
 begin
-  LMethod := UpperCase(ARequest.Method);
-
   LBestRoute := nil;
-  LBestSpecificity := -1;
   LPathMatched := False;
+  LBestSpecificity := -1;
 
   ARequest.PathParams.Clear;
 
-  // Localiza a rota mais específica compatível
-  // com o caminho e o método HTTP.
+  // ETAPA 1:
+  // Encontra a rota compatível de maior especificidade.
   for LRoute in FRoutes do
   begin
-    if TAWSLambda4DHTTPRouteMatcher.TryMatch(LRoute.Path, ARequest.Path, ARequest.PathParams) then
+    if not TAWSLambda4DHTTPRouteMatcher.TryMatch(LRoute.Path, ARequest.Path, ARequest.PathParams) then
+      Continue;
+
+    LPathMatched := True;
+
+    if not SameText(LRoute.Method, ARequest.Method) then
+      Continue;
+
+    // Rotas com mais segmentos estáticos têm prioridade.
+    if LRoute.Specificity > LBestSpecificity then
     begin
-      LPathMatched := True;
-      if (LRoute.Method = LMethod) and (LRoute.Specificity > LBestSpecificity) then
-      begin
-        LBestRoute := LRoute;
-        LBestSpecificity := LRoute.Specificity;
-      end;
+      LBestRoute := LRoute;
+      LBestSpecificity := LRoute.Specificity;
     end;
   end;
 
-  if LBestRoute <> nil then
+  // ETAPA 2:
+  // Executa a rota selecionada.
+  if Assigned(LBestRoute) then
   begin
-    // Recupera os parâmetros da rota escolhida.
     TAWSLambda4DHTTPRouteMatcher.TryMatch(LBestRoute.Path, ARequest.Path, ARequest.PathParams);
     Exit(LBestRoute.Handler.Execute(ARequest));
   end;
 
+  // Não deixa parâmetros residuais na requisição.
   ARequest.PathParams.Clear;
 
+  // O caminho existe, mas nenhum método corresponde.
   if LPathMatched then
     Exit(CreateErrorResponse(405, 'Method Not Allowed'));
 
+  // Nenhuma rota corresponde ao caminho.
   Result := CreateErrorResponse(404, 'Not Found');
 end;
 

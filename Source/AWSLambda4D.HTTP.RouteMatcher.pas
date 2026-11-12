@@ -66,8 +66,6 @@ var
   LParamName: string;
 begin
   Result := False;
-  APathParams.Clear;
-
   LRouteParts := SplitPath(ARoutePattern);
   LRequestParts := SplitPath(ARequestPath);
 
@@ -82,26 +80,32 @@ begin
 
     if LRoutePart.StartsWith(':') then
     begin
+      // Parâmetro dinâmico.
       if (Length(LRoutePart) = 1) or (LRequestPart = '') then
         Exit;
     end
     else
     begin
-      // Caminhos são comparados respeitando maiúsculas
-      // e minúsculas.
-      if not SameStr(LRoutePart, LRequestPart) then
+      // Segmentos estáticos ignoram maiúsculas/minúsculas.
+      if not SameText(LRoutePart, LRequestPart) then
         Exit;
     end;
   end;
 
-  // Depois da validação, extrai os parâmetros.
-  for LIndex := 0 to High(LRouteParts) do
+  // Somente extrai os parâmetros quando solicitado.
+  if Assigned(APathParams) then
   begin
-    LRoutePart := LRouteParts[LIndex];
-    if LRoutePart.StartsWith(':') then
+    APathParams.Clear;
+
+    for LIndex := 0 to High(LRouteParts) do
     begin
-      LParamName := Copy(LRoutePart, 2, MaxInt);
-      APathParams.Add(LParamName, LRequestParts[LIndex]);
+      LRoutePart := LRouteParts[LIndex];
+
+      if LRoutePart.StartsWith(':') then
+      begin
+        LParamName := Copy(LRoutePart, 2, MaxInt);
+        APathParams.Add(LParamName, LRequestParts[LIndex]);
+      end;
     end;
   end;
 
@@ -118,6 +122,7 @@ begin
 
   for LPart in LParts do
   begin
+    // Cada segmento estático aumenta a prioridade.
     if not LPart.StartsWith(':') then
       Inc(Result);
   end;
