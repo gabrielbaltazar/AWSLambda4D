@@ -29,6 +29,7 @@ begin
   LNumero := ARequest.PathParams.Field('numero').AsInteger;
   Result := TAWSLambda4DHTTPResponse.Create;
   Result.StatusCode := 200;
+  Result.Headers.Add('redis', 'muito bom');
   Result.SetBody(Format('{"message":"pong %s %d"}', [LId, LNumero]));
 end;
 

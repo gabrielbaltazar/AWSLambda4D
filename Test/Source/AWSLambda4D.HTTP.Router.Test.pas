@@ -94,6 +94,24 @@ type
     procedure Add_EmptyMethod_RaisesException;
     [Test]
     procedure Add_EmptyPath_RaisesException;
+
+    // Funcoes anonimas como handler
+    [Test]
+    procedure AnonymousHandler_AllMethods_ExecuteFunction;
+    [Test]
+    procedure AnonymousHandler_Add_CustomMethod_ExecuteFunction;
+    [Test]
+    procedure AnonymousHandler_ReceivesRequestWithPathParams;
+    [Test]
+    procedure AnonymousHandler_CapturesLocalVariables;
+    [Test]
+    procedure AnonymousHandler_MixedWithInterfaceHandler_BothWork;
+    [Test]
+    procedure AnonymousHandler_DuplicateRoute_RaisesException;
+    [Test]
+    procedure AnonymousHandler_NilFunction_RaisesException;
+    [Test]
+    procedure AnonymousHandler_ConvertError_PropagatesBadRequest;
   end;
 
 implementation
@@ -608,7 +626,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      FRouter.Get('/ping', nil);
+      FRouter.Get('/ping', IAWSLambda4DHTTPHandler(nil));
     end,
     EArgumentNilException);
 end;
@@ -631,6 +649,179 @@ begin
       FRouter.Get('', TStubHandler.Create('x'));
     end,
     EArgumentException);
+end;
+
+{ Funcoes anonimas como handler }
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_AllMethods_ExecuteFunction;
+var
+  LMethod: string;
+  LResponse: TAWSLambda4DHTTPResponse;
+begin
+  FRouter
+    .Get('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      begin
+        Result := TAWSLambda4DHTTPResponse.Create;
+        Result.SetBody('GET');
+      end)
+    .Post('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      begin
+        Result := TAWSLambda4DHTTPResponse.Create;
+        Result.SetBody('POST');
+      end)
+    .Put('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      begin
+        Result := TAWSLambda4DHTTPResponse.Create;
+        Result.SetBody('PUT');
+      end)
+    .Delete('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      begin
+        Result := TAWSLambda4DHTTPResponse.Create;
+        Result.SetBody('DELETE');
+      end)
+    .Patch('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      begin
+        Result := TAWSLambda4DHTTPResponse.Create;
+        Result.SetBody('PATCH');
+      end);
+
+  for LMethod in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] do
+  begin
+    LResponse := SendRequest(LMethod, '/r');
+    try
+      Assert.AreEqual(LMethod, BodyOf(LResponse));
+    finally
+      LResponse.Free;
+    end;
+  end;
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_Add_CustomMethod_ExecuteFunction;
+var
+  LResponse: TAWSLambda4DHTTPResponse;
+begin
+  FRouter.Add('OPTIONS', '/r',
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      Result := TAWSLambda4DHTTPResponse.Create;
+      Result.SetBody('options');
+    end);
+
+  LResponse := SendRequest('OPTIONS', '/r');
+  try
+    Assert.AreEqual('options', BodyOf(LResponse));
+  finally
+    LResponse.Free;
+  end;
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_ReceivesRequestWithPathParams;
+var
+  LResponse: TAWSLambda4DHTTPResponse;
+begin
+  FRouter.Get('/users/:id',
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      Result := TAWSLambda4DHTTPResponse.Create;
+      Result.SetBody(IntToStr(ARequest.PathParams.Field('id').AsInteger));
+    end);
+
+  LResponse := SendRequest('GET', '/users/15');
+  try
+    Assert.AreEqual('15', BodyOf(LResponse));
+  finally
+    LResponse.Free;
+  end;
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_CapturesLocalVariables;
+var
+  LCalls: Integer;
+  LResponse: TAWSLambda4DHTTPResponse;
+begin
+  LCalls := 0;
+  FRouter.Get('/count',
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      Inc(LCalls);
+      Result := TAWSLambda4DHTTPResponse.Create;
+    end);
+
+  SendRequest('GET', '/count').Free;
+  LResponse := SendRequest('GET', '/count');
+  LResponse.Free;
+
+  Assert.AreEqual(2, LCalls);
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_MixedWithInterfaceHandler_BothWork;
+var
+  LResponse: TAWSLambda4DHTTPResponse;
+begin
+  FRouter
+    .Get('/a', TStubHandler.Create('interface'))
+    .Get('/b', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      begin
+        Result := TAWSLambda4DHTTPResponse.Create;
+        Result.SetBody('anonymous');
+      end);
+
+  LResponse := SendRequest('GET', '/a');
+  try
+    Assert.AreEqual('interface', BodyOf(LResponse));
+  finally
+    LResponse.Free;
+  end;
+
+  LResponse := SendRequest('GET', '/b');
+  try
+    Assert.AreEqual('anonymous', BodyOf(LResponse));
+  finally
+    LResponse.Free;
+  end;
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_DuplicateRoute_RaisesException;
+begin
+  FRouter.Get('/ping', TStubHandler.Create('one'));
+
+  Assert.WillRaise(
+    procedure
+    begin
+      FRouter.Get('/PING',
+        function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+        begin
+          Result := TAWSLambda4DHTTPResponse.Create;
+        end);
+    end,
+    EArgumentException);
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_NilFunction_RaisesException;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      FRouter.Get('/ping', TAWSLambda4DHTTPHandlerProc(nil));
+    end,
+    EArgumentNilException);
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_ConvertError_PropagatesBadRequest;
+begin
+  FRouter.Get('/users/:id',
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      Result := TAWSLambda4DHTTPResponse.Create;
+      Result.SetBody(IntToStr(ARequest.PathParams.Field('id').AsInteger));
+    end);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      SendRequest('GET', '/users/abc').Free;
+    end,
+    EAWSLambda4DHTTPBadRequest);
 end;
 
 end.

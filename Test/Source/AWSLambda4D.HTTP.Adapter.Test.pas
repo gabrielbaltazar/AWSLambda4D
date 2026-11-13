@@ -70,8 +70,8 @@ var
   LRouter: IAWSLambda4DHTTPRouter;
 begin
   LRouter := TAWSLambda4DHTTPRouter.New;
-  LRouter.Get('/users/:id', TParamHandler.Create);
-  LRouter.Get('/boom', TFailingHandler.Create);
+  LRouter.Get('/users/:id', TParamHandler.Create());
+  LRouter.Get('/boom', TFailingHandler.Create());
 
   FAdapter := TAWSLambda4DHTTPAdapter.New(LRouter);
 end;

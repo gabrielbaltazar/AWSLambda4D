@@ -7,8 +7,6 @@ uses
   AWSLambda4D.HTTP.Types;
 
 type
-  IAWSLambda4DHTTPHandler = AWSLambda4D.HTTP.Types.IAWSLambda4DHTTPHandler;
-
   TAWSLambda4Runner = class
   public
     class procedure Run(const AHandler: IAWSLambda4DHTTPHandler; const AMaxInvocations: Integer = 0); overload;

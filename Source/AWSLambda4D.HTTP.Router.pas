@@ -36,12 +36,19 @@ type
     destructor Destroy; override;
 
     function Add(const AMethod: string; const APath: string;
-      const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Get(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Post(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Put(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Delete(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Patch(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
+      const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Get(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Post(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Put(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Delete(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Patch(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Add(const AMethod: string; const APath: string;
+      const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Get(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Post(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Put(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Delete(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Patch(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
     function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
   end;
 
@@ -49,6 +56,32 @@ implementation
 
 uses
   System.JSON;
+
+type
+  // Adapta uma funcao anonima para IAWSLambda4DHTTPHandler.
+  TAWSLambda4DHTTPProcHandler = class(TInterfacedObject, IAWSLambda4DHTTPHandler)
+  private
+    FProc: TAWSLambda4DHTTPHandlerProc;
+  protected
+    function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+  public
+    constructor Create(const AProc: TAWSLambda4DHTTPHandlerProc);
+  end;
+
+{ TAWSLambda4DHTTPProcHandler }
+
+constructor TAWSLambda4DHTTPProcHandler.Create(const AProc: TAWSLambda4DHTTPHandlerProc);
+begin
+  if not Assigned(AProc) then
+    raise EArgumentNilException.Create('AHandler');
+  inherited Create;
+  FProc := AProc;
+end;
+
+function TAWSLambda4DHTTPProcHandler.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+begin
+  Result := FProc(ARequest);
+end;
 
 { TAWSLambda4DHTTPRoute }
 
@@ -169,6 +202,42 @@ begin
     Result.Free;
     raise;
   end;
+end;
+
+function TAWSLambda4DHTTPRouter.Add(const AMethod: string; const APath: string;
+  const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter;
+begin
+  Result := Add(AMethod, APath, TAWSLambda4DHTTPProcHandler.Create(AHandler));
+end;
+
+function TAWSLambda4DHTTPRouter.Get(const APath: string;
+  const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter;
+begin
+  Result := Add('GET', APath, AHandler);
+end;
+
+function TAWSLambda4DHTTPRouter.Post(const APath: string;
+  const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter;
+begin
+  Result := Add('POST', APath, AHandler);
+end;
+
+function TAWSLambda4DHTTPRouter.Put(const APath: string;
+  const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter;
+begin
+  Result := Add('PUT', APath, AHandler);
+end;
+
+function TAWSLambda4DHTTPRouter.Delete(const APath: string;
+  const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter;
+begin
+  Result := Add('DELETE', APath, AHandler);
+end;
+
+function TAWSLambda4DHTTPRouter.Patch(const APath: string;
+  const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter;
+begin
+  Result := Add('PATCH', APath, AHandler);
 end;
 
 function TAWSLambda4DHTTPRouter.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;

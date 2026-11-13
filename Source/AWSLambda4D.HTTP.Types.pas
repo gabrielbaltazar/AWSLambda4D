@@ -109,6 +109,9 @@ type
     property IsBase64Encoded: Boolean read FIsBase64Encoded write FIsBase64Encoded;
   end;
 
+  TAWSLambda4DHTTPHandlerProc = reference to function(const ARequest: TAWSLambda4DHTTPRequest):
+    TAWSLambda4DHTTPResponse;
+
   IAWSLambda4DHTTPHandler = interface
     ['{4A218098-9557-4D97-85F2-CAA6052FC9B1}']
     function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
@@ -117,12 +120,19 @@ type
   IAWSLambda4DHTTPRouter = interface(IAWSLambda4DHTTPHandler)
     ['{F3857F4E-BCBD-4EA0-93E9-FD3E708C60D8}']
     function Add(const AMethod: string; const APath: string;
-      const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Get(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Post(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Put(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Delete(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
-    function Patch(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter;
+      const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Get(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Post(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Put(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Delete(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Patch(const APath: string; const AHandler: IAWSLambda4DHTTPHandler): IAWSLambda4DHTTPRouter; overload;
+    function Add(const AMethod: string; const APath: string;
+      const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Get(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Post(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Put(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Delete(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Patch(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
   end;
 
   TAWSLambda4DHTTPValues = class
