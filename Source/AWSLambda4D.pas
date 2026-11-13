@@ -4,6 +4,7 @@ interface
 
 uses
   AWSLambda4D.Classes,
+  AWSLambda4D.HTTP.Events,
   AWSLambda4D.HTTP.Router,
   AWSLambda4D.HTTP.Types,
   AWSLambda4D.Runner,
@@ -23,6 +24,11 @@ type
   TAWSLambda4DHTTPRequest = AWSLambda4D.HTTP.Types.TAWSLambda4DHTTPRequest;
 
   TAWSLambda4DHTTPResponse = AWSLambda4D.HTTP.Types.TAWSLambda4DHTTPResponse;
+
+  // HTTP Events
+  IAWSLambda4DHTTPPayloadV2 = AWSLambda4D.HTTP.Events.IAWSLambda4DHTTPPayloadV2;
+
+  TAWSLambda4DHTTPPayloadV2 = AWSLambda4D.HTTP.Events.TAWSLambda4DHTTPPayloadV2;
 
   // Runtime
   TAWSLambda4DRequest = AWSLambda4D.Classes.TAWSLambda4DRequest;

@@ -8,6 +8,7 @@ uses
   AWSLambda4D.Classes,
   AWSLambda4D.Runtime.Interfaces,
   AWSLambda4D.HTTP.Types,
+  AWSLambda4D.HTTP.Events,
   AWSLambda4D.Runner;
 
 type
@@ -22,6 +23,10 @@ type
     procedure RunLocal_HTTPHandler_ReceivesRoutedRequest;
     [Test]
     procedure RunLocal_CalledTwice_RunsEachTime;
+    [Test]
+    procedure RunLocal_RouterWithPayloadBuilder_ReceivesRequestFromPayload;
+    [Test]
+    procedure RunLocal_NilPayload_RaisesException;
   end;
 
 implementation
@@ -99,6 +104,46 @@ begin
   TAWSLambda4Runner.RunLocal(LHandler, '{}');
 
   Assert.AreEqual(2, LCalls);
+end;
+
+procedure TAWSLambda4DRunnerTest.RunLocal_RouterWithPayloadBuilder_ReceivesRequestFromPayload;
+var
+  LRouter: IAWSLambda4DHTTPRouter;
+  LPayload: IAWSLambda4DHTTPPayloadV2;
+  LContext: IAWSLambda4DHTTPPayloadV2RequestContext;
+  LId: Integer;
+  LQuery: string;
+begin
+  LId := 0;
+  LQuery := '';
+  LRouter := TAWSLambda4DHTTPRouter.New;
+  LRouter.Post('/documents/:id',
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      LId := ARequest.PathParams.Field('id').AsInteger;
+      LQuery := ARequest.QueryParam('status');
+      Result := TAWSLambda4DHTTPResponse.Create;
+    end);
+
+  LPayload := TAWSLambda4DHTTPPayloadV2.Create;
+  LPayload.RawPath('/documents/15').AddQuery('status', 'active');
+  LContext := TAWSLambda4DHTTPPayloadV2RequestContext.Create(LPayload);
+  LContext.HTTP.Method('POST').Path('/documents/15');
+
+  TAWSLambda4Runner.RunLocal(LRouter, LPayload);
+
+  Assert.AreEqual(15, LId);
+  Assert.AreEqual('active', LQuery);
+end;
+
+procedure TAWSLambda4DRunnerTest.RunLocal_NilPayload_RaisesException;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      TAWSLambda4Runner.RunLocal(TAWSLambda4DHTTPRouter.New, IAWSLambda4DHTTPPayloadV2(nil));
+    end,
+    EArgumentNilException);
 end;
 
 end.

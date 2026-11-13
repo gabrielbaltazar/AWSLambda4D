@@ -5,19 +5,7 @@ program MockLambda;
 {$R *.res}
 
 uses
-  System.SysUtils,
-  AWSLambda4D.Classes in '..\..\Source\AWSLambda4D.Classes.pas',
-  AWSLambda4D.Runtime.Interfaces in '..\..\Source\AWSLambda4D.Runtime.Interfaces.pas',
-  AWSLambda4D.Runtime in '..\..\Source\AWSLambda4D.Runtime.pas',
-  AWSLambda4D.Runtime.API in '..\..\Source\AWSLambda4D.Runtime.API.pas',
-  AWSLambda4D.Runtime.API.Mock in '..\..\Source\AWSLambda4D.Runtime.API.Mock.pas',
-  AWSLambda4D.JsonProcessor.Handler in '..\..\Source\AWSLambda4D.JsonProcessor.Handler.pas',
-  AWSLambda4D.Runtime.LocalServer in '..\..\Source\AWSLambda4D.Runtime.LocalServer.pas',
-  AWSLambda4D.HTTP.Types in '..\..\Source\AWSLambda4D.HTTP.Types.pas',
-  AWSLambda4D.HTTP.Adapter in '..\..\Source\AWSLambda4D.HTTP.Adapter.pas',
-  AWSLambda4D.Utils in '..\..\Source\AWSLambda4D.Utils.pas',
-  AWSLambda4D.HTTP.RouteMatcher in '..\..\Source\AWSLambda4D.HTTP.RouteMatcher.pas',
-  AWSLambda4D.HTTP.Router in '..\..\Source\AWSLambda4D.HTTP.Router.pas';
+  System.SysUtils;
 
 var
   I: Integer;

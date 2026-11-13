@@ -294,6 +294,7 @@ end;
 destructor TAWSLambda4DHTTPResponse.Destroy;
 begin
   FHeaders.Free;
+  FCookies.Free;
   inherited;
 end;
 

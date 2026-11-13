@@ -4,7 +4,8 @@ interface
 
 uses
   AWSLambda4D.Runtime.Interfaces,
-  AWSLambda4D.HTTP.Types;
+  AWSLambda4D.HTTP.Types,
+  AWSLambda4D.HTTP.Events;
 
 type
   TAWSLambda4Runner = class
@@ -29,6 +30,9 @@ type
     class procedure RunLocal(const AHandler: IAWSLambda4DHandler; const AEvent: string;
       const APort: Integer = 9001); overload;
     class procedure RunLocal(const AHandler: IAWSLambda4DHTTPHandler; const AEvent: string;
+      const APort: Integer = 9001); overload;
+    // AHandler pode ser o router; o evento e gerado por APayload.Content (API Gateway HTTP API, v2).
+    class procedure RunLocal(const AHandler: IAWSLambda4DHTTPHandler; const APayload: IAWSLambda4DHTTPPayloadV2;
       const APort: Integer = 9001); overload;
   end;
 
@@ -181,6 +185,15 @@ class procedure TAWSLambda4Runner.RunLocal(const AHandler: IAWSLambda4DHTTPHandl
   const APort: Integer);
 begin
   RunLocal(TAWSLambda4DHTTPAdapter.New(AHandler), AEvent, APort);
+end;
+
+class procedure TAWSLambda4Runner.RunLocal(const AHandler: IAWSLambda4DHTTPHandler;
+  const APayload: IAWSLambda4DHTTPPayloadV2; const APort: Integer);
+begin
+  if APayload = nil then
+    raise EArgumentNilException.Create('APayload');
+
+  RunLocal(AHandler, APayload.Content, APort);
 end;
 
 end.
