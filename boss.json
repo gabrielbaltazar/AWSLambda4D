@@ -1,0 +1,9 @@
+{
+	"name": "AWSLambda4D",
+	"description": "",
+	"version": "1.0.0",
+	"homepage": "https://github.com/gabrielbaltazar/AWSLambda4D",
+	"mainsrc": "Source",
+	"projects": [],
+	"dependencies": {}
+}
