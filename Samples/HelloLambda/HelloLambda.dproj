@@ -115,7 +115,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="HelloLambda.Handle.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -159,9 +158,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Bin\HelloLambda.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>HelloLambda.rsm</RemoteName>
+                <DeployFile LocalName="Bin\HelloLambda" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Linux64">
+                        <RemoteName>HelloLambda</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

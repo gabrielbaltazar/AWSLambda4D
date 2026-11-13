@@ -9,6 +9,10 @@ uses
 type
   ELambdaRuntimeAPI = class(Exception);
 
+  // Permite executar a funcao Lambda com uma funcao anonima, sem criar uma classe de handler.
+  TAWSLambda4DHandlerProc = reference to function(const ARequest: TAWSLambda4DRequest;
+    const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
+
   IAWSLambda4DHandler = interface
     ['{55CABAF2-F2DA-477B-9C58-10E2CFEDB98A}']
     function Handle(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;

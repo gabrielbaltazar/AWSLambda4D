@@ -6,8 +6,7 @@ program HelloLambda;
 
 uses
   System.SysUtils,
-  AWSLambda4D.Runner,
-  HelloLambda.Handle in 'HelloLambda.Handle.pas';
+  AWSLambda4D;
 
 begin
 {$IFDEF MSWINDOWS}
@@ -15,5 +14,11 @@ begin
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
 
-  TAWSLambda4Runner.Run(THelloLambdaHandle.New);
+  TAWSLambda4Runner.Run(
+    function(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse
+    begin
+      Result := TAWSLambda4DResponse.Create;
+      System.Writeln(ARequest.Body);
+      Result.Body := '{"message":"hello"}';
+    end);
 end.
