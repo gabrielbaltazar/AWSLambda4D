@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/logo.png" alt="AWSLambda4D" width="420">
+  <img src="Images/logo.png" alt="AWSLambda4D" width="420">
 </p>
 
 # AWSLambda4D
