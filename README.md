@@ -1,0 +1,365 @@
+# AWSLambda4D
+
+**English** | [Português](README.pt-BR.md)
+
+**AWSLambda4D is a library for running native Delphi functions on AWS Lambda.**
+
+It implements the [Lambda Runtime API](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html) so that a Delphi
+executable (compiled for Linux 64-bit and named `bootstrap`) can run as an AWS Lambda *custom runtime*. You write the
+function in Delphi, with no interpreter and no container image required, and the library takes care of the
+poll → run → reply loop that Lambda expects.
+
+- Plain handlers for any Lambda event (JSON in, JSON out).
+- A typed HTTP layer for API Gateway (HTTP API v2 and REST API v1) and Lambda Function URLs.
+- A small router with path parameters (`/users/:id`) and typed parameter reading (`AsInteger`, `AsDateTime`, ...).
+- Anonymous functions **or** classes for your handlers, your choice.
+- The same executable can run on your own machine (Windows or Linux) against a built-in local server, so you can try
+  the function before uploading it.
+
+## Table of contents
+
+- [How it works](#how-it-works)
+- [Which handler interface should I use?](#which-handler-interface-should-i-use)
+- [Examples](#examples)
+  - [HelloLambda: a plain handler](#hellolambda-a-plain-handler)
+  - [APIHTTPLambda: an HTTP handler](#apihttplambda-an-http-handler)
+  - [APIHTTPRouterLambda: a router](#apihttprouterlambda-a-router)
+- [Reading request data with types](#reading-request-data-with-types)
+- [Running locally before deploying](#running-locally-before-deploying)
+- [Building and deploying](#building-and-deploying)
+- [Project layout](#project-layout)
+- [Tests](#tests)
+
+## How it works
+
+A Lambda custom runtime is just a program that talks HTTP to an endpoint that AWS publishes in the
+`AWS_LAMBDA_RUNTIME_API` environment variable. For every invocation it must:
+
+1. `GET  /2018-06-01/runtime/invocation/next` to receive the event (and headers such as the request id);
+2. run your code;
+3. `POST /2018-06-01/runtime/invocation/{id}/response` with the result, or `.../error` if it failed.
+
+AWSLambda4D implements that loop:
+
+```
+                +-------------------------- your executable (bootstrap) --------------------------+
+                |                                                                                  |
+ AWS Lambda <---+--> TAWSLambda4DRuntimeAPI <--> TAWSLambda4DRuntime <--> your handler             |
+ (Runtime API)  |        (HTTP client)              (the loop)            IAWSLambda4DHandler      |
+                |                                                         or, on top of it,        |
+                |                                                         IAWSLambda4DHTTPHandler  |
+                +----------------------------------------------------------------------------------+
+```
+
+- `TAWSLambda4Runner` (unit `AWSLambda4D.Runner`) is the entry point of your program. `Run` starts the loop.
+- If your handler raises an exception, the runtime reports it to Lambda as a function error
+  (`Function.<ExceptionClass>`) and keeps serving the next invocation.
+- For HTTP events, `TAWSLambda4DHTTPAdapter` sits between the runtime and your code: it parses the API Gateway JSON into
+  a typed request, calls your HTTP handler and serializes the response back to the format API Gateway expects.
+- The runtime owns the request, response and context objects of each invocation and frees them for you. Your handler
+  creates and returns a **new** response object and must not free the request or the context.
+
+Add the single unit `AWSLambda4D` to your `uses` clause to get the main types.
+
+## Which handler interface should I use?
+
+There are two levels. Both can be implemented as a class **or** passed as an anonymous function.
+
+| | `IAWSLambda4DHandler` | `IAWSLambda4DHTTPHandler` |
+|---|---|---|
+| Method | `Handle(ARequest, AContext): TAWSLambda4DResponse` | `Execute(ARequest): TAWSLambda4DHTTPResponse` |
+| Anonymous function type | `TAWSLambda4DHandlerProc` | `TAWSLambda4DHTTPHandlerProc` |
+| Input | The raw event as a JSON string (`ARequest.Body`) plus the Lambda context (`AContext`: request id, function ARN, deadline, trace id) | A parsed HTTP request: method, path, path/query parameters, headers, cookies, body |
+| Output | A raw string (`Result.Body`) that Lambda returns as the function result | An HTTP response: status code, headers, cookies, body |
+| Event formats | Anything: direct invoke, SQS, SNS, S3, EventBridge, a custom payload... | HTTP events from API Gateway (HTTP API v2, REST API v1) and Lambda Function URLs |
+| Event parsing | You parse the JSON yourself | Done for you; supports payload v1 and v2 |
+| Errors | An exception becomes a Lambda function error | An exception becomes an HTTP `500 Internal Server Error`; a bad typed parameter becomes `400` with the conversion message |
+| Run with | `TAWSLambda4Runner.Run(handler)` | `TAWSLambda4Runner.Run(httpHandler)` (the adapter is added for you) |
+
+**Use `IAWSLambda4DHandler` when** the function is *not* an HTTP endpoint: it reacts to queue messages, file uploads,
+schedules or direct invocations, or when you need full control over the raw event and the Lambda context.
+
+**Use `IAWSLambda4DHTTPHandler` when** the function sits behind API Gateway or a Function URL and you are building
+a web API. You work with `Method`, `Path`, `PathParams`, `QueryParams`, `Headers` and `StatusCode` instead of
+hand-parsing the gateway JSON. When you have several routes, use the router (`IAWSLambda4DHTTPRouter`), which is
+itself an `IAWSLambda4DHTTPHandler`.
+
+## Examples
+
+All three samples live in `Samples/`. They also show how to run the same code locally (see
+[Running locally before deploying](#running-locally-before-deploying)).
+
+### HelloLambda: a plain handler
+
+**With an anonymous function** (`Samples/HelloLambda/HelloLambda.dpr`):
+
+```pascal
+program HelloLambda;
+
+{$APPTYPE CONSOLE}
+
+uses
+  System.SysUtils,
+  AWSLambda4D;
+
+function HelloWorld(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
+begin
+  Result := TAWSLambda4DResponse.Create;
+  System.Writeln(ARequest.Body);                 // the raw event
+  Result.Body := '{"message":"hello"}';
+end;
+
+begin
+  if TAWSLambda4Runner.SelfHosted then
+    TAWSLambda4Runner.RunLocal(HelloWorld, '{"name":"Gabriel"}')   // on your machine
+  else
+    TAWSLambda4Runner.Run(HelloWorld);                             // on AWS Lambda
+end.
+```
+
+`HelloWorld` can be a plain function (as above) or an inline `function(...) begin ... end` passed to `Run`; both are a
+`TAWSLambda4DHandlerProc`.
+
+**With a handler class** (`Samples/HelloLambda/HelloLambda.Handle.pas`):
+
+```pascal
+type
+  THelloLambdaHandle = class(TInterfacedObject, IAWSLambda4DHandler)
+  protected
+    function Handle(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
+  public
+    class function New: IAWSLambda4DHandler;
+  end;
+
+function THelloLambdaHandle.Handle(const ARequest: TAWSLambda4DRequest;
+  const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  try
+    LJSON.AddPair('timezone', 'UTC');
+    LJSON.AddPair('awsRequestId', AContext.AwsRequestId);   // Lambda context
+    LJSON.AddPair('functionArn', AContext.FunctionArn);
+    Result := TAWSLambda4DResponse.Create;
+    Result.Body := LJSON.ToJSON;
+  finally
+    LJSON.Free;
+  end;
+end;
+
+class function THelloLambdaHandle.New: IAWSLambda4DHandler;
+begin
+  Result := Self.Create;
+end;
+```
+
+and in the `.dpr`:
+
+```pascal
+TAWSLambda4Runner.Run(THelloLambdaHandle.New);
+```
+
+Prefer a class when the handler has dependencies, state, or enough code to deserve its own unit and unit tests.
+
+### APIHTTPLambda: an HTTP handler
+
+A single `IAWSLambda4DHTTPHandler` answers every request, whatever the path.
+
+**With a handler class** (`Samples/APIHTTPLambda`):
+
+```pascal
+type
+  TAPIHTTPHandler = class(TInterfacedObject, IAWSLambda4DHTTPHandler)
+  protected
+    function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+  public
+    class function New: IAWSLambda4DHTTPHandler;
+  end;
+
+function TAPIHTTPHandler.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  try
+    LJSON.AddPair('timezone', 'UTC');
+    Result := TAWSLambda4DHTTPResponse.Create;
+    Result.StatusCode := 201;
+    Result.Headers.Add('content-type', 'application/json; charset=utf-8');
+    Result.SetBody(LJSON.ToJSON);
+  finally
+    LJSON.Free;
+  end;
+end;
+```
+
+```pascal
+var
+  LHttpHandler: IAWSLambda4DHTTPHandler;
+begin
+  LHttpHandler := TAPIHTTPHandler.Create;
+  TAWSLambda4Runner.Run(LHttpHandler);
+end.
+```
+
+**With an anonymous function:** the HTTP anonymous function type (`TAWSLambda4DHTTPHandlerProc`) is accepted by the
+router, so register it as a route (see the next sample). `TAWSLambda4Runner.Run` itself has no overload for it.
+
+### APIHTTPRouterLambda: a router
+
+The router dispatches by HTTP method and path. Each route takes either an `IAWSLambda4DHTTPHandler` (a class) or an
+anonymous function.
+
+**With anonymous functions** (`Samples/APIHTTPRouterLambda/APIHTTPRouterLambda.dpr`):
+
+```pascal
+var
+  LRouter: IAWSLambda4DHTTPRouter;
+begin
+  LRouter := TAWSLambda4DHTTPRouter.New;
+  LRouter.Get('ping',
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      Result := TAWSLambda4DHTTPResponse.Create;
+      Result.StatusCode := 200;
+      Result.SetBody('{"message":"pong"}');
+    end);
+
+  if TAWSLambda4Runner.SelfHosted then
+    TAWSLambda4Runner.RunLocal(LRouter,
+      TAWSLambda4DHTTPPayloadV2.New
+        .RawPath('/ping')
+        .RequestContext.HTTP
+          .Method('GET').Path('/ping').&End.&End)
+  else
+    TAWSLambda4Runner.Run(LRouter);
+end.
+```
+
+**With handler classes** (`Samples/APIHTTPRouterLambda/Ping.Handler.pas`), mixing both styles and using path
+parameters:
+
+```pascal
+type
+  TPingHandler = class(TInterfacedObject, IAWSLambda4DHTTPHandler)
+  protected
+    function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+  public
+    class function New: IAWSLambda4DHTTPHandler;
+  end;
+
+function TPingHandler.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+var
+  LId: string;
+  LNumero: Integer;
+begin
+  LId := ARequest.PathParams.Field('id').AsString;
+  LNumero := ARequest.PathParams.Field('numero').AsInteger;   // typed; 400 if it is not an integer
+  Result := TAWSLambda4DHTTPResponse.Create;
+  Result.StatusCode := 200;
+  Result.SetBody(Format('{"message":"pong %s %d"}', [LId, LNumero]));
+end;
+```
+
+```pascal
+LRouter
+  .Get('/ping', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      Result := TAWSLambda4DHTTPResponse.Create;
+      Result.SetBody('{"message":"pong"}');
+    end)
+  .Get('/ping/:id/:numero', TPingHandler.New);
+```
+
+Router behavior:
+
+- Methods: `Get`, `Post`, `Put`, `Delete`, `Patch`, and `Add('OPTIONS', ...)` for any other method. Calls can be chained.
+- Segments starting with `:` are path parameters, read with `ARequest.PathParams.Field('name')`.
+- Method and path matching are **case-insensitive** (`/PING` matches `/ping`); parameter values keep their case.
+  A trailing slash is ignored.
+- When several routes match, the one with more static segments wins (`/users/me` beats `/users/:id`).
+- No route for the path answers `404 Not Found`; a route for the path but another method answers `405 Method Not Allowed`.
+- Registering the same method and path twice raises an exception.
+
+> **Note:** passing a constructor without parentheses, as in `LRouter.Get('/x', TMyHandler.Create)`, is ambiguous between
+> the class overload and the function overload. Write `TMyHandler.Create()` or use a `New` class function that returns
+> the interface, as the samples do.
+
+## Reading request data with types
+
+`PathParams`, `QueryParams` and `Headers` offer `First('name')`, which returns the raw string, and `Field('name')`,
+which returns a typed value:
+
+```pascal
+ARequest.PathParams.Field('id').AsInteger
+ARequest.QueryParams.Field('price').AsFloat
+ARequest.QueryParams.Field('total').AsCurrency
+ARequest.QueryParams.Field('from').AsDate          // ISO 8601: 2024-03-15
+ARequest.QueryParams.Field('at').AsDateTime        // ISO 8601: 2024-03-15T10:30:45-03:00
+ARequest.QueryParams.Field('name').AsString
+```
+
+- `AsInteger`, `AsFloat`, `AsCurrency`, `AsDate`, `AsDateTime`, `AsString`; floats and currency use `.` as the decimal separator.
+- If the value is missing or invalid, `AsXxx` raises `EAWSLambda4DHTTPBadRequest`; the HTTP adapter turns it into a
+  `400` response whose body is `{"message":"<conversion message>"}`. Any other exception becomes a generic `500`.
+- `AsXxx(Default)` returns the default instead of raising; `TryAsXxx(out Value)` returns `False`; `Exists` tells whether
+  the parameter was sent.
+- Dates with a time zone (`Z` or `+hh:mm`) are returned in UTC.
+
+## Running locally before deploying
+
+`TAWSLambda4Runner.SelfHosted` is `True` when the `AWS_LAMBDA_RUNTIME_API` variable is **not** defined, that is, when
+you are not inside Lambda. In that case `RunLocal` starts a local server that emulates the Runtime API (default port
+`9001`), delivers one event, runs your handler, prints the result to the console and returns. Inside Lambda you call
+`Run` as usual. This works on Windows and on Linux.
+
+```pascal
+if TAWSLambda4Runner.SelfHosted then
+  TAWSLambda4Runner.RunLocal(handler, '{"name":"Gabriel"}')   // event as a JSON string
+else
+  TAWSLambda4Runner.Run(handler);
+```
+
+For HTTP functions you can describe the request fluently instead of writing the API Gateway JSON by hand (payload
+format 2.0). `Content` returns the generated JSON if you want to see it:
+
+```pascal
+LPayload := TAWSLambda4DHTTPPayloadV2.New
+  .RawPath('/documents/15')
+  .AddQuery('status', 'active')
+  .AddHeader('content-type', 'application/json')
+  .Body('{"number":123}');
+LPayload.RequestContext.HTTP.Method('POST').Path('/documents/15');
+
+TAWSLambda4Runner.RunLocal(LRouter, LPayload);
+```
+
+Values separated by commas become repeated parameters (`AddQuery('id', '10,20')` produces `id=10&id=20`). Keep a variable
+holding the payload while you use `RequestContext`/`HTTP`, as the chained parents are held by weak references.
+
+## Building and deploying
+
+1. Compile the project for **Linux 64-bit** (needs the Delphi Linux SDK / PAServer).
+2. Name the executable `bootstrap` and zip it.
+3. Create the Lambda function with a custom runtime (`provided.al2023`), upload the zip, and, for HTTP, attach an API
+   Gateway HTTP API or a Function URL.
+
+These are the standard steps for any AWS custom runtime; the library does not add anything beyond the executable. Use
+`ReportMemoryLeaksOnShutdown := True` during development to catch leaks.
+
+## Project layout
+
+| Path | Contents |
+|---|---|
+| `Source/AWSLambda4D.pas` | Facade unit: aliases for the main types; `uses AWSLambda4D` is usually enough |
+| `Source/AWSLambda4D.Runner.pas` | `TAWSLambda4Runner`: `Run`, `RunLocal`, `SelfHosted` |
+| `Source/AWSLambda4D.Runtime*.pas` | The loop, the Runtime API client, a mock and the local server |
+| `Source/AWSLambda4D.HTTP.*.pas` | HTTP types, adapter (API Gateway v1/v2), router, route matcher and the v2 event builder |
+| `Samples/` | `HelloLambda`, `APIHTTPLambda`, `APIHTTPRouterLambda`, plus `LocalLambda` and `MockLambda` |
+| `Test/` | DUnitX test project |
+
+## Tests
+
+The `Test/AWSLambda4DTest.dproj` project uses DUnitX (router, typed parameters, HTTP adapter, runner and event
+builder). Build and run it from the Delphi IDE or with `msbuild Test\AWSLambda4DTest.dproj /p:Platform=Win64`.
