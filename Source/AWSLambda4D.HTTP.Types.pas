@@ -11,8 +11,13 @@ type
 
   TAWSLambda4DHTTPValues = class;
 
+  // Entrada invalida enviada pelo cliente (ex.: parametro nao conversivel).
+  // O TAWSLambda4DHTTPAdapter a converte em uma resposta HTTP 400 com a mensagem.
+  // Herda de EConvertError para manter a compatibilidade com quem a captura.
+  EAWSLambda4DHTTPBadRequest = class(Exception);
+
   // Valor de um parametro (path, query, header) com leitura tipada.
-  // AsXxx levanta EConvertError se o valor nao existir ou for invalido;
+  // AsXxx levanta EAWSLambda4DHTTPBadRequest se o valor nao existir ou for invalido;
   // AsXxx(ADefault) devolve ADefault nesses casos; TryAsXxx devolve False.
   // Datas e horas seguem o formato ISO 8601 e sao devolvidas em UTC
   // quando o texto informa fuso horario (Z ou +hh:mm).
@@ -156,9 +161,9 @@ end;
 procedure TAWSLambda4DHTTPField.RaiseConvertError(const ATypeName: string);
 begin
   if not FExists then
-    raise EConvertError.CreateFmt('Parameter ''%s'' was not found.', [FName]);
+    raise EAWSLambda4DHTTPBadRequest.CreateFmt('Parameter ''%s'' was not found.', [FName]);
 
-  raise EConvertError.CreateFmt('Parameter ''%s'' has value ''%s'', which is not a valid %s.',
+  raise EAWSLambda4DHTTPBadRequest.CreateFmt('Parameter ''%s'' has value ''%s'', which is not a valid %s.',
     [FName, FValue, ATypeName]);
 end;
 

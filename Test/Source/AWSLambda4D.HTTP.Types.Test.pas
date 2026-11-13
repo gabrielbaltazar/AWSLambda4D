@@ -33,9 +33,9 @@ type
     [Test]
     procedure AsInteger_NegativeValue_ReturnsInteger;
     [Test]
-    procedure AsInteger_InvalidValue_RaisesConvertError;
+    procedure AsInteger_InvalidValue_RaisesBadRequest;
     [Test]
-    procedure AsInteger_MissingValue_RaisesConvertError;
+    procedure AsInteger_MissingValue_RaisesBadRequest;
     [Test]
     procedure AsInteger_InvalidValue_ReturnsDefault;
     [Test]
@@ -45,7 +45,7 @@ type
     [Test]
     procedure AsFloat_UsesDotAsDecimalSeparator;
     [Test]
-    procedure AsFloat_InvalidValue_RaisesConvertError;
+    procedure AsFloat_InvalidValue_RaisesBadRequest;
     [Test]
     procedure AsCurrency_UsesDotAsDecimalSeparator;
     [Test]
@@ -55,7 +55,7 @@ type
     [Test]
     procedure AsDateTime_Iso8601WithOffset_ReturnsUtc;
     [Test]
-    procedure AsDateTime_NonIsoValue_RaisesConvertError;
+    procedure AsDateTime_NonIsoValue_RaisesBadRequest;
     [Test]
     procedure AsDate_DateOnly_ReturnsDate;
     [Test]
@@ -116,7 +116,7 @@ begin
   Assert.AreEqual(-7, FValues.Field('id').AsInteger);
 end;
 
-procedure TAWSLambda4DHTTPFieldTest.AsInteger_InvalidValue_RaisesConvertError;
+procedure TAWSLambda4DHTTPFieldTest.AsInteger_InvalidValue_RaisesBadRequest;
 begin
   FValues.Add('id', 'abc');
 
@@ -125,17 +125,17 @@ begin
     begin
       FValues.Field('id').AsInteger;
     end,
-    EConvertError);
+    EAWSLambda4DHTTPBadRequest);
 end;
 
-procedure TAWSLambda4DHTTPFieldTest.AsInteger_MissingValue_RaisesConvertError;
+procedure TAWSLambda4DHTTPFieldTest.AsInteger_MissingValue_RaisesBadRequest;
 begin
   Assert.WillRaise(
     procedure
     begin
       FValues.Field('id').AsInteger;
     end,
-    EConvertError);
+    EAWSLambda4DHTTPBadRequest);
 end;
 
 procedure TAWSLambda4DHTTPFieldTest.AsInteger_InvalidValue_ReturnsDefault;
@@ -163,7 +163,7 @@ begin
   Assert.AreEqual(12.5, FValues.Field('price').AsFloat, 0.0001);
 end;
 
-procedure TAWSLambda4DHTTPFieldTest.AsFloat_InvalidValue_RaisesConvertError;
+procedure TAWSLambda4DHTTPFieldTest.AsFloat_InvalidValue_RaisesBadRequest;
 begin
   FValues.Add('price', 'x');
 
@@ -172,7 +172,7 @@ begin
     begin
       FValues.Field('price').AsFloat;
     end,
-    EConvertError);
+    EAWSLambda4DHTTPBadRequest);
 end;
 
 procedure TAWSLambda4DHTTPFieldTest.AsCurrency_UsesDotAsDecimalSeparator;
@@ -199,7 +199,7 @@ begin
   Assert.AreEqual(EncodeDateTime(2024, 3, 15, 13, 30, 45, 0), FValues.Field('at').AsDateTime);
 end;
 
-procedure TAWSLambda4DHTTPFieldTest.AsDateTime_NonIsoValue_RaisesConvertError;
+procedure TAWSLambda4DHTTPFieldTest.AsDateTime_NonIsoValue_RaisesBadRequest;
 begin
   FValues.Add('at', '15/03/2024');
 
@@ -208,7 +208,7 @@ begin
     begin
       FValues.Field('at').AsDateTime;
     end,
-    EConvertError);
+    EAWSLambda4DHTTPBadRequest);
 end;
 
 procedure TAWSLambda4DHTTPFieldTest.AsDate_DateOnly_ReturnsDate;

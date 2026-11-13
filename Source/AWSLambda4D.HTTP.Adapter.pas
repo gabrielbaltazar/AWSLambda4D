@@ -16,6 +16,7 @@ type
   private
     FHandler: IAWSLambda4DHTTPHandler;
 
+    function BuildErrorResponse(const AStatusCode: Integer; const AMessage: string): TAWSLambda4DHTTPResponse;
     procedure ParseQueryString(const ARawQueryString: string; const AParams: TAWSLambda4DHTTPValues);
     function ParseRequest(const AEventJSON: string; out APayloadVersion: TAWSLambda4DHttpPayloadVersion):
       TAWSLambda4DHTTPRequest;
@@ -42,6 +43,29 @@ begin
   FHandler := AHandler;
 end;
 
+function TAWSLambda4DHTTPAdapter.BuildErrorResponse(const AStatusCode: Integer;
+  const AMessage: string): TAWSLambda4DHTTPResponse;
+var
+  LJSON: TJSONObject;
+begin
+  Result := TAWSLambda4DHTTPResponse.Create;
+  try
+    Result.StatusCode := AStatusCode;
+    Result.Headers.Add('content-type', 'application/json; charset=utf-8');
+
+    LJSON := TJSONObject.Create;
+    try
+      LJSON.AddPair('message', AMessage);
+      Result.SetBody(LJSON.ToJSON);
+    finally
+      LJSON.Free;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
 function TAWSLambda4DHTTPAdapter.Handle(const ARequest: TAWSLambda4DRequest;
   const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
 var
@@ -57,13 +81,12 @@ begin
       if LHttpResponse = nil then
         raise Exception.Create('The Handler HTTP returns a null response.');
     except
+      // Entrada invalida do cliente (ex.: parametro nao conversivel): 400 com a mensagem.
+      on E: EAWSLambda4DHTTPBadRequest do
+        LHttpResponse := BuildErrorResponse(400, E.Message);
+
       on E: Exception do
-      begin
-        LHttpResponse := TAWSLambda4DHTTPResponse.Create;
-        LHttpResponse.StatusCode := 500;
-        LHttpResponse.Headers.Add('content-type', 'application/json; charset=utf-8');
-        LHttpResponse.SetBody('{"message":"Internal Server Error"}');
-      end;
+        LHttpResponse := BuildErrorResponse(500, 'Internal Server Error');
     end;
 
     Result := TAWSLambda4DResponse.Create;
