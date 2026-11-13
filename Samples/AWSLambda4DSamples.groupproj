@@ -27,6 +27,9 @@
         <Projects Include="..\Test\AWSLambda4DTest.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="DescontoLambda\DescontoLambda.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="WebHook\WebHook.dproj">
             <Dependencies/>
         </Projects>
@@ -109,6 +112,15 @@
     </Target>
     <Target Name="AWSLambda4DTest:Make">
         <MSBuild Projects="..\Test\AWSLambda4DTest.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DescontoLambda">
+        <MSBuild Projects="DescontoLambda\DescontoLambda.dproj"/>
+    </Target>
+    <Target Name="DescontoLambda:Clean">
+        <MSBuild Projects="DescontoLambda\DescontoLambda.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DescontoLambda:Make">
+        <MSBuild Projects="DescontoLambda\DescontoLambda.dproj" Targets="Make"/>
     </Target>
     <Target Name="WebHook">
         <MSBuild Projects="WebHook\WebHook.dproj"/>
