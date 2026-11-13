@@ -209,8 +209,20 @@ begin
 end.
 ```
 
-**Com função anônima:** o tipo de função anônima HTTP (`TAWSLambda4DHTTPHandlerProc`) é aceito pelo router; então
-registre-a como uma rota (veja o próximo exemplo). O próprio `TAWSLambda4Runner.Run` não tem sobrecarga para ele.
+**Com função anônima** (`TAWSLambda4DHTTPHandlerProc`):
+
+```pascal
+TAWSLambda4Runner.Run(
+  function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+  begin
+    Result := TAWSLambda4DHTTPResponse.Create;
+    Result.StatusCode := 201;
+    Result.Headers.Add('content-type', 'application/json; charset=utf-8');
+    Result.SetBody('{"timezone":"UTC"}');
+  end);
+```
+
+O `RunLocal` aceita a mesma função nas execuções locais, com uma string de evento ou com o builder de payload.
 
 ### APIHTTPRouterLambda: um router
 

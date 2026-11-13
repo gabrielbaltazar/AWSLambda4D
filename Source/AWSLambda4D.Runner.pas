@@ -18,6 +18,7 @@ type
     class procedure Run(const AHandler: IAWSLambda4DHTTPHandler; const AMaxInvocations: Integer = 0); overload;
     class procedure Run(const AHandler: IAWSLambda4DHandler; const AMaxInvocations: Integer = 0); overload;
     class procedure Run(const AHandler: TAWSLambda4DHandlerProc; const AMaxInvocations: Integer = 0); overload;
+    class procedure Run(const AHandler: TAWSLambda4DHTTPHandlerProc; const AMaxInvocations: Integer = 0); overload;
 
     // Mesmo codigo para desenvolvimento e producao:
     // - Fora da Lambda (AWS_LAMBDA_RUNTIME_API nao definida; Windows ou Linux): sobe o servidor
@@ -30,6 +31,10 @@ type
     class procedure RunLocal(const AHandler: IAWSLambda4DHandler; const AEvent: string;
       const APort: Integer = 9001); overload;
     class procedure RunLocal(const AHandler: IAWSLambda4DHTTPHandler; const AEvent: string;
+      const APort: Integer = 9001); overload;
+    class procedure RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc; const AEvent: string;
+      const APort: Integer = 9001); overload;
+    class procedure RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc; const APayload: IAWSLambda4DHTTPPayloadV2;
       const APort: Integer = 9001); overload;
     // AHandler pode ser o router; o evento e gerado por APayload.Content (API Gateway HTTP API, v2).
     class procedure RunLocal(const AHandler: IAWSLambda4DHTTPHandler; const APayload: IAWSLambda4DHTTPPayloadV2;
@@ -118,6 +123,11 @@ begin
   Run(TAWSLambda4DProcHandler.New(AHandler), AMaxInvocations);
 end;
 
+class procedure TAWSLambda4Runner.Run(const AHandler: TAWSLambda4DHTTPHandlerProc; const AMaxInvocations: Integer);
+begin
+  Run(TAWSLambda4DHTTPProcHandler.New(AHandler), AMaxInvocations);
+end;
+
 class procedure TAWSLambda4Runner.RunLocalInvocation(const AHandler: IAWSLambda4DHandler; const AEvent: string;
   const APort: Integer);
 var
@@ -194,6 +204,18 @@ begin
     raise EArgumentNilException.Create('APayload');
 
   RunLocal(AHandler, APayload.Content, APort);
+end;
+
+class procedure TAWSLambda4Runner.RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc; const AEvent: string;
+  const APort: Integer);
+begin
+  RunLocal(TAWSLambda4DHTTPProcHandler.New(AHandler), AEvent, APort);
+end;
+
+class procedure TAWSLambda4Runner.RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc;
+  const APayload: IAWSLambda4DHTTPPayloadV2; const APort: Integer);
+begin
+  RunLocal(TAWSLambda4DHTTPProcHandler.New(AHandler), APayload, APort);
 end;
 
 end.

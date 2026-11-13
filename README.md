@@ -207,8 +207,20 @@ begin
 end.
 ```
 
-**With an anonymous function:** the HTTP anonymous function type (`TAWSLambda4DHTTPHandlerProc`) is accepted by the
-router, so register it as a route (see the next sample). `TAWSLambda4Runner.Run` itself has no overload for it.
+**With an anonymous function** (`TAWSLambda4DHTTPHandlerProc`):
+
+```pascal
+TAWSLambda4Runner.Run(
+  function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+  begin
+    Result := TAWSLambda4DHTTPResponse.Create;
+    Result.StatusCode := 201;
+    Result.Headers.Add('content-type', 'application/json; charset=utf-8');
+    Result.SetBody('{"timezone":"UTC"}');
+  end);
+```
+
+`RunLocal` accepts the same function for local runs, with an event string or with the payload builder.
 
 ### APIHTTPRouterLambda: a router
 

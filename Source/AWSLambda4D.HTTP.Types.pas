@@ -117,6 +117,18 @@ type
     function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
   end;
 
+  // Adapta uma funcao anonima para IAWSLambda4DHTTPHandler.
+  TAWSLambda4DHTTPProcHandler = class(TInterfacedObject, IAWSLambda4DHTTPHandler)
+  private
+    FProc: TAWSLambda4DHTTPHandlerProc;
+  protected
+    function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+  public
+    constructor Create(const AProc: TAWSLambda4DHTTPHandlerProc);
+    // Devolve a interface (e nao a instancia) para que a contagem de referencias libere o objeto.
+    class function New(const AProc: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPHandler;
+  end;
+
   IAWSLambda4DHTTPRouter = interface(IAWSLambda4DHTTPHandler)
     ['{F3857F4E-BCBD-4EA0-93E9-FD3E708C60D8}']
     function Add(const AMethod: string; const APath: string;
@@ -280,6 +292,26 @@ function TAWSLambda4DHTTPField.AsDate(const ADefault: TDateTime): TDateTime;
 begin
   if not TryAsDate(Result) then
     Result := ADefault;
+end;
+
+{ TAWSLambda4DHTTPProcHandler }
+
+constructor TAWSLambda4DHTTPProcHandler.Create(const AProc: TAWSLambda4DHTTPHandlerProc);
+begin
+  if not Assigned(AProc) then
+    raise EArgumentNilException.Create('AHandler');
+  inherited Create;
+  FProc := AProc;
+end;
+
+class function TAWSLambda4DHTTPProcHandler.New(const AProc: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPHandler;
+begin
+  Result := Self.Create(AProc);
+end;
+
+function TAWSLambda4DHTTPProcHandler.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+begin
+  Result := FProc(ARequest);
 end;
 
 { TAWSLambda4DHTTPResponse }

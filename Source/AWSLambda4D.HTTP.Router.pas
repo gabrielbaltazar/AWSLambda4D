@@ -57,32 +57,6 @@ implementation
 uses
   System.JSON;
 
-type
-  // Adapta uma funcao anonima para IAWSLambda4DHTTPHandler.
-  TAWSLambda4DHTTPProcHandler = class(TInterfacedObject, IAWSLambda4DHTTPHandler)
-  private
-    FProc: TAWSLambda4DHTTPHandlerProc;
-  protected
-    function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
-  public
-    constructor Create(const AProc: TAWSLambda4DHTTPHandlerProc);
-  end;
-
-{ TAWSLambda4DHTTPProcHandler }
-
-constructor TAWSLambda4DHTTPProcHandler.Create(const AProc: TAWSLambda4DHTTPHandlerProc);
-begin
-  if not Assigned(AProc) then
-    raise EArgumentNilException.Create('AHandler');
-  inherited Create;
-  FProc := AProc;
-end;
-
-function TAWSLambda4DHTTPProcHandler.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
-begin
-  Result := FProc(ARequest);
-end;
-
 { TAWSLambda4DHTTPRoute }
 
 constructor TAWSLambda4DHTTPRoute.Create(const AMethod: string; const APath: string;
@@ -207,7 +181,7 @@ end;
 function TAWSLambda4DHTTPRouter.Add(const AMethod: string; const APath: string;
   const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter;
 begin
-  Result := Add(AMethod, APath, TAWSLambda4DHTTPProcHandler.Create(AHandler));
+  Result := Add(AMethod, APath, TAWSLambda4DHTTPProcHandler.New(AHandler));
 end;
 
 function TAWSLambda4DHTTPRouter.Get(const APath: string;

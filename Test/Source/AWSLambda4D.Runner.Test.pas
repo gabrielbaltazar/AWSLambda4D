@@ -27,6 +27,12 @@ type
     procedure RunLocal_RouterWithPayloadBuilder_ReceivesRequestFromPayload;
     [Test]
     procedure RunLocal_NilPayload_RaisesException;
+    [Test]
+    procedure RunLocal_HTTPAnonymousFunctionWithEvent_ReceivesRequest;
+    [Test]
+    procedure RunLocal_HTTPAnonymousFunctionWithPayload_ReceivesRequest;
+    [Test]
+    procedure RunLocal_NilHTTPFunction_RaisesException;
   end;
 
 implementation
@@ -142,6 +148,52 @@ begin
     procedure
     begin
       TAWSLambda4Runner.RunLocal(TAWSLambda4DHTTPRouter.New, IAWSLambda4DHTTPPayloadV2(nil));
+    end,
+    EArgumentNilException);
+end;
+
+procedure TAWSLambda4DRunnerTest.RunLocal_HTTPAnonymousFunctionWithEvent_ReceivesRequest;
+var
+  LPath: string;
+begin
+  TAWSLambda4Runner.RunLocal(
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      LPath := ARequest.Path;
+      Result := TAWSLambda4DHTTPResponse.Create;
+      Result.SetBody('pong');
+    end,
+    '{"httpMethod":"GET","path":"/ping"}');
+
+  Assert.AreEqual('/ping', LPath);
+end;
+
+procedure TAWSLambda4DRunnerTest.RunLocal_HTTPAnonymousFunctionWithPayload_ReceivesRequest;
+var
+  LMethod: string;
+  LPath: string;
+begin
+  TAWSLambda4Runner.RunLocal(
+    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    begin
+      LMethod := ARequest.Method;
+      LPath := ARequest.Path;
+      Result := TAWSLambda4DHTTPResponse.Create;
+    end,
+    TAWSLambda4DHTTPPayloadV2.New
+      .RawPath('/items')
+      .RequestContext.HTTP.Method('POST').Path('/items').&End.&End);
+
+  Assert.AreEqual('POST', LMethod);
+  Assert.AreEqual('/items', LPath);
+end;
+
+procedure TAWSLambda4DRunnerTest.RunLocal_NilHTTPFunction_RaisesException;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      TAWSLambda4Runner.RunLocal(TAWSLambda4DHTTPHandlerProc(nil), '{}');
     end,
     EArgumentNilException);
 end;
