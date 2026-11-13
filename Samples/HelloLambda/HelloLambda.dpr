@@ -8,17 +8,23 @@ uses
   System.SysUtils,
   AWSLambda4D;
 
+function HelloWorld(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
+begin
+  Result := TAWSLambda4DResponse.Create;
+  System.Writeln(ARequest.Body);
+  Result.Body := '{"message":"hello"}';
+end;
+
 begin
 {$IFDEF MSWINDOWS}
   IsConsole := False;
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
 
-  TAWSLambda4Runner.Run(
-    function(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse
-    begin
-      Result := TAWSLambda4DResponse.Create;
-      System.Writeln(ARequest.Body);
-      Result.Body := '{"message":"hello"}';
-    end);
+  if TAWSLambda4Runner.SelfHosted then
+    TAWSLambda4Runner.RunLocal(HelloWorld, '{"name":"Gabriel"}')
+  else
+    TAWSLambda4Runner.Run(HelloWorld);
+
+  System.Readln;
 end.
