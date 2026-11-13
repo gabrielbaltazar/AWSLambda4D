@@ -5,7 +5,12 @@ program MockLambda;
 {$R *.res}
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  AWSLambda4D.Runtime,
+  AWSLambda4D.Runtime.Interfaces,
+  AWSLambda4D.Runtime.API,
+  AWSLambda4D.Runtime.API.Mock,
+  AWSLambda4D.JsonProcessor.Handler;
 
 var
   I: Integer;

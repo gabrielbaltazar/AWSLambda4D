@@ -6,7 +6,7 @@ program APIHTTPLambda;
 
 uses
   System.SysUtils,
-  AWSLambda4D.Runner,
+  AWSLambda4D,
   APIHTTPHandler in 'APIHTTPHandler.pas';
 
 var

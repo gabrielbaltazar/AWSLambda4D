@@ -10,7 +10,6 @@ uses
 
 var
   LRouter: IAWSLambda4DHTTPRouter;
-  LPayload: IAWSLambda4DHTTPPayloadV2;
 begin
 {$IFDEF MSWINDOWS}
   IsConsole := False;
