@@ -27,6 +27,9 @@
         <Projects Include="..\Test\AWSLambda4DTest.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="WebHook\WebHook.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -107,14 +110,23 @@
     <Target Name="AWSLambda4DTest:Make">
         <MSBuild Projects="..\Test\AWSLambda4DTest.dproj" Targets="Make"/>
     </Target>
+    <Target Name="WebHook">
+        <MSBuild Projects="WebHook\WebHook.dproj"/>
+    </Target>
+    <Target Name="WebHook:Clean">
+        <MSBuild Projects="WebHook\WebHook.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WebHook:Make">
+        <MSBuild Projects="WebHook\WebHook.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda;HTTPLambda;HTTPSimulator;APIHTTPLambda;APIHTTPRouterLambda;AWSLambda4DTest"/>
+        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda;HTTPLambda;HTTPSimulator;APIHTTPLambda;APIHTTPRouterLambda;AWSLambda4DTest;WebHook"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean;HTTPLambda:Clean;HTTPSimulator:Clean;APIHTTPLambda:Clean;APIHTTPRouterLambda:Clean;AWSLambda4DTest:Clean"/>
+        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean;HTTPLambda:Clean;HTTPSimulator:Clean;APIHTTPLambda:Clean;APIHTTPRouterLambda:Clean;AWSLambda4DTest:Clean;WebHook:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make;HTTPLambda:Make;HTTPSimulator:Make;APIHTTPLambda:Make;APIHTTPRouterLambda:Make;AWSLambda4DTest:Make"/>
+        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make;HTTPLambda:Make;HTTPSimulator:Make;APIHTTPLambda:Make;APIHTTPRouterLambda:Make;AWSLambda4DTest:Make;WebHook:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
