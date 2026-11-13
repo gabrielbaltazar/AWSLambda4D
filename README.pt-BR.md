@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/logo.png" alt="AWSLambda4D" width="420">
+</p>
+
 # AWSLambda4D
 
 [English](README.md) | **Português**
