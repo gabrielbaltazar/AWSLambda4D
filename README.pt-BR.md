@@ -304,6 +304,44 @@ Comportamento do router:
 > sobrecarga de classe e a de função. Escreva `TMeuHandler.Create()` ou use uma `class function New` que devolve a
 > interface, como nos exemplos.
 
+### Sem criar um router: `TAWSLambda4D`
+
+Se você não quer criar e guardar uma variável de router, use a classe estática `TAWSLambda4D` (no estilo do framework
+[Horse](https://github.com/HashLoad/horse)). Cada chamada registra uma rota em um único router do processo e devolve a
+própria classe, então as chamadas podem ser encadeadas:
+
+```pascal
+uses
+  AWSLambda4D;
+
+begin
+  TAWSLambda4D
+    .Get('/ping', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      begin
+        Result := TAWSLambda4DHTTPResponse.Create;
+        Result.SetBody('{"message":"pong"}');
+      end)
+    .Post('/ping', TPingPostHandler.New)          // classes também funcionam
+    .Run;                                         // no AWS Lambda
+end.
+```
+
+Para simular uma requisição na sua máquina, termine o encadeamento com `RunLocal` e o builder de payload (ou uma
+string de evento):
+
+```pascal
+TAWSLambda4D
+  .Get('/ping', LHandler1)
+  .Post('/ping', LHandler2)
+  .RunLocal(TAWSLambda4DHTTPPayloadV2.New
+    .RawPath('/ping')
+    .RequestContext.HTTP.Method('POST').Path('/ping').&End.&End);
+```
+
+`Get`, `Post`, `Put`, `Delete`, `Patch` e `Add(método, caminho, ...)` recebem um `IAWSLambda4DHTTPHandler` ou uma
+função anônima e se comportam como os métodos do router acima. `TAWSLambda4D.Router` devolve o router interno e
+`TAWSLambda4D.Reset` descarta as rotas registradas (útil em testes). Dentro do Lambda, `RunLocal` se comporta como `Run`.
+
 ## Lendo dados da requisição com tipos
 
 `PathParams`, `QueryParams` e `Headers` oferecem `First('nome')`, que devolve a string bruta, e `Field('nome')`, que
