@@ -24,13 +24,10 @@
         <Projects Include="APIHTTPRouterLambda\APIHTTPRouterLambda.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\Test\AWSLambda4DTest.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="DescontoLambda\DescontoLambda.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="WebHook\WebHook.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\Test\AWSLambda4DTest.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -104,24 +101,6 @@
     <Target Name="APIHTTPRouterLambda:Make">
         <MSBuild Projects="APIHTTPRouterLambda\APIHTTPRouterLambda.dproj" Targets="Make"/>
     </Target>
-    <Target Name="AWSLambda4DTest">
-        <MSBuild Projects="..\Test\AWSLambda4DTest.dproj"/>
-    </Target>
-    <Target Name="AWSLambda4DTest:Clean">
-        <MSBuild Projects="..\Test\AWSLambda4DTest.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="AWSLambda4DTest:Make">
-        <MSBuild Projects="..\Test\AWSLambda4DTest.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="DescontoLambda">
-        <MSBuild Projects="DescontoLambda\DescontoLambda.dproj"/>
-    </Target>
-    <Target Name="DescontoLambda:Clean">
-        <MSBuild Projects="DescontoLambda\DescontoLambda.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="DescontoLambda:Make">
-        <MSBuild Projects="DescontoLambda\DescontoLambda.dproj" Targets="Make"/>
-    </Target>
     <Target Name="WebHook">
         <MSBuild Projects="WebHook\WebHook.dproj"/>
     </Target>
@@ -131,14 +110,23 @@
     <Target Name="WebHook:Make">
         <MSBuild Projects="WebHook\WebHook.dproj" Targets="Make"/>
     </Target>
+    <Target Name="AWSLambda4DTest">
+        <MSBuild Projects="..\Test\AWSLambda4DTest.dproj"/>
+    </Target>
+    <Target Name="AWSLambda4DTest:Clean">
+        <MSBuild Projects="..\Test\AWSLambda4DTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AWSLambda4DTest:Make">
+        <MSBuild Projects="..\Test\AWSLambda4DTest.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda;HTTPLambda;HTTPSimulator;APIHTTPLambda;APIHTTPRouterLambda;AWSLambda4DTest;WebHook"/>
+        <CallTarget Targets="HelloLambda;MockLambda;LocalLambda;HTTPLambda;HTTPSimulator;APIHTTPLambda;APIHTTPRouterLambda;WebHook;AWSLambda4DTest"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean;HTTPLambda:Clean;HTTPSimulator:Clean;APIHTTPLambda:Clean;APIHTTPRouterLambda:Clean;AWSLambda4DTest:Clean;WebHook:Clean"/>
+        <CallTarget Targets="HelloLambda:Clean;MockLambda:Clean;LocalLambda:Clean;HTTPLambda:Clean;HTTPSimulator:Clean;APIHTTPLambda:Clean;APIHTTPRouterLambda:Clean;WebHook:Clean;AWSLambda4DTest:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make;HTTPLambda:Make;HTTPSimulator:Make;APIHTTPLambda:Make;APIHTTPRouterLambda:Make;AWSLambda4DTest:Make;WebHook:Make"/>
+        <CallTarget Targets="HelloLambda:Make;MockLambda:Make;LocalLambda:Make;HTTPLambda:Make;HTTPSimulator:Make;APIHTTPLambda:Make;APIHTTPRouterLambda:Make;WebHook:Make;AWSLambda4DTest:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
