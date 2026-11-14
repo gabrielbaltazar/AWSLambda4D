@@ -166,6 +166,54 @@ TAWSLambda4Runner.Run(THelloLambdaHandle.New);
 
 Prefer a class when the handler has dependencies, state, or enough code to deserve its own unit and unit tests.
 
+#### The request and the context
+
+A `TAWSLambda4DHandlerProc` (or `IAWSLambda4DHandler.Handle`) receives two objects. In short: use the **request** to
+decide *what* to process, and the **context** to *log, trace and watch the time*.
+
+| | `TAWSLambda4DRequest` | `TAWSLambda4DContext` |
+|---|---|---|
+| What it is | The event that triggered the function | Metadata about this invocation, provided by Lambda |
+| Where it comes from | The body of the Runtime API response | The headers of that same response |
+| Changes with | Who invoked the function (S3, queue, schedule, direct invoke) | Each execution |
+| Fields | `Body`, `RequestId` | `AwsRequestId`, `InvocationId`, `FunctionArn`, `TraceId`, `DeadlineMs` |
+
+**`TAWSLambda4DRequest`** is your business input:
+
+- `Body` is the event as a JSON string. Parse it yourself (for example with `System.JSON`).
+- `RequestId` repeats the `AwsRequestId` of the context.
+
+**`TAWSLambda4DContext`** is not part of your input data; it answers "who, where and until when":
+
+- `AwsRequestId`: unique id of the invocation. Write it in your log lines to find everything about one execution in CloudWatch.
+- `InvocationId`: invocation identifier reported by the Runtime API.
+- `FunctionArn`: the function being run (name, account, region and alias can be taken from it).
+- `TraceId`: tracing id (X-Ray), to propagate to other services.
+- `DeadlineMs`: the instant the execution will be cut, in milliseconds since 1970 (UTC).
+
+```pascal
+function Process(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
+var
+  LRemainingMs: Int64;
+begin
+  Writeln('[', AContext.AwsRequestId, '] event: ', ARequest.Body);
+
+  // How much time is left before Lambda interrupts the function
+  LRemainingMs := AContext.DeadlineMs - DateTimeToUnix(Now, False) * 1000;   // System.DateUtils
+  if LRemainingMs < 2000 then
+    raise Exception.Create('Not enough time left to process the event.');
+
+  Result := TAWSLambda4DResponse.Create;      // the function returns a NEW response
+  Result.Body := '{"ok":true}';
+end;
+```
+
+The runtime owns the request, the context and the response of each invocation and frees them for you; the function only
+returns a new `TAWSLambda4DResponse` (its `Body` is the function result) and must not free the two parameters.
+
+HTTP handlers (`IAWSLambda4DHTTPHandler`) receive only the `TAWSLambda4DHTTPRequest`; the Lambda context is not passed to
+them.
+
 ### APIHTTPLambda: an HTTP handler
 
 A single `IAWSLambda4DHTTPHandler` answers every request, whatever the path.

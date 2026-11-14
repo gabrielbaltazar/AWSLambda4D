@@ -168,6 +168,54 @@ TAWSLambda4Runner.Run(THelloLambdaHandle.New);
 Prefira a classe quando o handler tem dependências, estado, ou código suficiente para merecer uma unit própria e
 testes unitários.
 
+#### O request e o contexto
+
+Um `TAWSLambda4DHandlerProc` (ou `IAWSLambda4DHandler.Handle`) recebe dois objetos. Resumindo: use o **request** para
+decidir *o que* processar, e o **contexto** para *registrar, rastrear e controlar o tempo*.
+
+| | `TAWSLambda4DRequest` | `TAWSLambda4DContext` |
+|---|---|---|
+| O que é | O evento que disparou a função | Metadados da invocação, fornecidos pelo Lambda |
+| De onde vem | Do corpo da resposta da Runtime API | Dos cabeçalhos dessa mesma resposta |
+| Muda conforme | Quem chamou a função (S3, fila, agendamento, invocação direta) | Cada execução |
+| Campos | `Body`, `RequestId` | `AwsRequestId`, `InvocationId`, `FunctionArn`, `TraceId`, `DeadlineMs` |
+
+**`TAWSLambda4DRequest`** é a sua entrada de negócio:
+
+- `Body` é o evento como string JSON. Você mesmo faz o parse (por exemplo com `System.JSON`).
+- `RequestId` repete o `AwsRequestId` do contexto.
+
+**`TAWSLambda4DContext`** não faz parte dos dados de entrada; ele responde "quem, onde e até quando":
+
+- `AwsRequestId`: id único da invocação. Escreva-o nas linhas de log para achar tudo de uma execução no CloudWatch.
+- `InvocationId`: identificador da invocação informado pela Runtime API.
+- `FunctionArn`: a função que está rodando (nome, conta, região e alias podem ser extraídos dele).
+- `TraceId`: id de rastreamento (X-Ray), para propagar a outros serviços.
+- `DeadlineMs`: o instante em que a execução será interrompida, em milissegundos desde 1970 (UTC).
+
+```pascal
+function Processar(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse;
+var
+  LRestanteMs: Int64;
+begin
+  Writeln('[', AContext.AwsRequestId, '] evento: ', ARequest.Body);
+
+  // Quanto tempo falta antes de o Lambda interromper a função
+  LRestanteMs := AContext.DeadlineMs - DateTimeToUnix(Now, False) * 1000;   // System.DateUtils
+  if LRestanteMs < 2000 then
+    raise Exception.Create('Sem tempo suficiente para processar o evento.');
+
+  Result := TAWSLambda4DResponse.Create;      // a função devolve um NOVO response
+  Result.Body := '{"ok":true}';
+end;
+```
+
+O runtime é dono do request, do contexto e do response de cada invocação e os libera para você; a função apenas devolve
+um novo `TAWSLambda4DResponse` (o `Body` dele é o resultado da função) e não deve liberar os dois parâmetros.
+
+Os handlers HTTP (`IAWSLambda4DHTTPHandler`) recebem só o `TAWSLambda4DHTTPRequest`; o contexto do Lambda não é repassado
+a eles.
+
 ### APIHTTPLambda: um handler HTTP
 
 Um único `IAWSLambda4DHTTPHandler` responde a todas as requisições, seja qual for o caminho.
