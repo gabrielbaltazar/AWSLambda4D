@@ -23,7 +23,8 @@ function PercentualDesconto(const ACliente: string): Integer;
 begin
   if SameText(ACliente, 'vip') then
     Result := 10
-  else if SameText(ACliente, 'regular') then
+  else
+  if SameText(ACliente, 'regular') then
     Result := 5
   else
     Result := 0;
@@ -79,8 +80,6 @@ begin
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
 
-  // Fora da Lambda (AWS_LAMBDA_RUNTIME_API ausente): testa aqui na maquina, com um evento de exemplo.
-  // Dentro da Lambda: entra no loop normal e atende as invocacoes.
   if TAWSLambda4Runner.SelfHosted then
     TAWSLambda4Runner.RunLocal(CalcularDesconto, '{"valor":200,"cliente":"vip"}')
   else
