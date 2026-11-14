@@ -297,7 +297,7 @@ begin
   try
     AResponseInfo.CustomHeaders.Values[CRequestId] := LInvocation.RequestId;
     AResponseInfo.CustomHeaders.Values[CInvocationId] := LInvocation.InvocationId;
-    AResponseInfo.CustomHeaders.Values[CDeadLine] := IntToStr(DateTimeToUnix(Now) * 1000 + 30000);
+    AResponseInfo.CustomHeaders.Values[CDeadLine] := IntToStr(DateTimeToUnix(Now, False) * 1000 + 30000);
 
     AResponseInfo.CustomHeaders.Values[CFunctionArn] := 'arn:aws:lambda:local:123456789012:function:LocalFunction';
     AResponseInfo.CustomHeaders.Values[CTraceId] := 'Root=1-00000000-000000000000000000000000';

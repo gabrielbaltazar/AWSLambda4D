@@ -164,7 +164,7 @@ begin
     LDeadline := GetHeader(LResponse.Headers, CHeaderDeadline);
 
     AContext.DeadlineMs := 0;
-    if not TryStrToInt64(LDeadline, LOutValue) then
+    if TryStrToInt64(LDeadline, LOutValue) then
       AContext.DeadlineMs := LOutValue;
 
     if AContext.AwsRequestId = '' then
