@@ -80,10 +80,10 @@ begin
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
 
-  if TAWSLambda4Runner.SelfHosted then
-    TAWSLambda4Runner.RunLocal(CalcularDesconto, '{"valor":200,"cliente":"vip"}')
+  if TAWSLambda4DRunner.SelfHosted then
+    TAWSLambda4DRunner.RunLocal(CalcularDesconto, '{"valor":200,"cliente":"vip"}')
   else
-    TAWSLambda4Runner.Run(CalcularDesconto);
+    TAWSLambda4DRunner.Run(CalcularDesconto);
 
   System.Readln;
 end.

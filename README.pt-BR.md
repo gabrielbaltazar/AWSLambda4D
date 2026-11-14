@@ -55,7 +55,7 @@ O AWSLambda4D implementa esse ciclo:
                 +--------------------------------------------------------------------------------+
 ```
 
-- `TAWSLambda4Runner` (unit `AWSLambda4D.Runner`) é o ponto de entrada do seu programa. `Run` inicia o loop.
+- `TAWSLambda4DRunner` (unit `AWSLambda4D.Runner`) é o ponto de entrada do seu programa. `Run` inicia o loop.
 - Se o seu handler lançar uma exceção, o runtime a informa ao Lambda como erro da função
   (`Function.<ClasseDaExceção>`) e continua atendendo a próxima invocação.
 - Em eventos HTTP, o `TAWSLambda4DHTTPAdapter` fica entre o runtime e o seu código: ele converte o JSON do API Gateway
@@ -78,7 +78,7 @@ Existem dois níveis. Os dois podem ser implementados como classe **ou** passado
 | Formatos de evento | Qualquer um: invocação direta, SQS, SNS, S3, EventBridge, um payload próprio... | Eventos HTTP do API Gateway (HTTP API v2, REST API v1) e de Lambda Function URLs |
 | Leitura do evento | Você faz o parse do JSON | Já feito; suporta payload v1 e v2 |
 | Erros | Uma exceção vira erro da função no Lambda | Uma exceção vira HTTP `500 Internal Server Error`; um parâmetro tipado inválido vira `400` com a mensagem da conversão |
-| Como executar | `TAWSLambda4Runner.Run(handler)` | `TAWSLambda4Runner.Run(httpHandler)` (o adapter é incluído para você) |
+| Como executar | `TAWSLambda4DRunner.Run(handler)` | `TAWSLambda4DRunner.Run(httpHandler)` (o adapter é incluído para você) |
 
 **Use `IAWSLambda4DHandler` quando** a função *não* é um endpoint HTTP: ela reage a mensagens de fila, upload de
 arquivos, agendamentos ou invocações diretas, ou quando você precisa de controle total sobre o evento bruto e o
@@ -115,10 +115,10 @@ begin
 end;
 
 begin
-  if TAWSLambda4Runner.SelfHosted then
-    TAWSLambda4Runner.RunLocal(HelloWorld, '{"name":"Gabriel"}')   // na sua máquina
+  if TAWSLambda4DRunner.SelfHosted then
+    TAWSLambda4DRunner.RunLocal(HelloWorld, '{"name":"Gabriel"}')   // na sua máquina
   else
-    TAWSLambda4Runner.Run(HelloWorld);                             // no AWS Lambda
+    TAWSLambda4DRunner.Run(HelloWorld);                             // no AWS Lambda
 end.
 ```
 
@@ -162,7 +162,7 @@ end;
 e no `.dpr`:
 
 ```pascal
-TAWSLambda4Runner.Run(THelloLambdaHandle.New);
+TAWSLambda4DRunner.Run(THelloLambdaHandle.New);
 ```
 
 Prefira a classe quando o handler tem dependências, estado, ou código suficiente para merecer uma unit própria e
@@ -253,14 +253,14 @@ var
   LHttpHandler: IAWSLambda4DHTTPHandler;
 begin
   LHttpHandler := TAPIHTTPHandler.Create;
-  TAWSLambda4Runner.Run(LHttpHandler);
+  TAWSLambda4DRunner.Run(LHttpHandler);
 end.
 ```
 
 **Com função anônima** (`TAWSLambda4DHTTPHandlerProc`):
 
 ```pascal
-TAWSLambda4Runner.Run(
+TAWSLambda4DRunner.Run(
   function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
   begin
     Result := TAWSLambda4DHTTPResponse.Create;
@@ -292,14 +292,14 @@ begin
       Result.SetBody('{"message":"pong"}');
     end);
 
-  if TAWSLambda4Runner.SelfHosted then
-    TAWSLambda4Runner.RunLocal(LRouter,
+  if TAWSLambda4DRunner.SelfHosted then
+    TAWSLambda4DRunner.RunLocal(LRouter,
       TAWSLambda4DHTTPPayloadV2.New
         .RawPath('/ping')
         .RequestContext.HTTP
           .Method('GET').Path('/ping').&End.&End)
   else
-    TAWSLambda4Runner.Run(LRouter);
+    TAWSLambda4DRunner.Run(LRouter);
 end.
 ```
 
@@ -413,16 +413,16 @@ ARequest.QueryParams.Field('name').AsString
 
 ## Rodando localmente antes de subir
 
-`TAWSLambda4Runner.SelfHosted` é `True` quando a variável `AWS_LAMBDA_RUNTIME_API` **não** está definida, isto é,
+`TAWSLambda4DRunner.SelfHosted` é `True` quando a variável `AWS_LAMBDA_RUNTIME_API` **não** está definida, isto é,
 quando você não está dentro do Lambda. Nesse caso o `RunLocal` sobe um servidor local que emula a Runtime API (porta
 padrão `9001`), entrega um evento, executa o seu handler, imprime o resultado no console e retorna. Dentro do Lambda
 você chama `Run` normalmente. Funciona no Windows e no Linux.
 
 ```pascal
-if TAWSLambda4Runner.SelfHosted then
-  TAWSLambda4Runner.RunLocal(handler, '{"name":"Gabriel"}')   // evento como string JSON
+if TAWSLambda4DRunner.SelfHosted then
+  TAWSLambda4DRunner.RunLocal(handler, '{"name":"Gabriel"}')   // evento como string JSON
 else
-  TAWSLambda4Runner.Run(handler);
+  TAWSLambda4DRunner.Run(handler);
 ```
 
 Para funções HTTP você pode descrever a requisição de forma fluente, em vez de escrever à mão o JSON do API Gateway
@@ -436,7 +436,7 @@ LPayload := TAWSLambda4DHTTPPayloadV2.New
   .Body('{"number":123}');
 LPayload.RequestContext.HTTP.Method('POST').Path('/documents/15');
 
-TAWSLambda4Runner.RunLocal(LRouter, LPayload);
+TAWSLambda4DRunner.RunLocal(LRouter, LPayload);
 ```
 
 Valores separados por vírgula viram parâmetros repetidos (`AddQuery('id', '10,20')` gera `id=10&id=20`). Mantenha uma
@@ -457,7 +457,7 @@ São os passos padrão de qualquer custom runtime da AWS; a biblioteca não acre
 | Caminho | Conteúdo |
 |---|---|
 | `Source/AWSLambda4D.pas` | Unit de fachada: aliases dos principais tipos; normalmente basta `uses AWSLambda4D` |
-| `Source/AWSLambda4D.Runner.pas` | `TAWSLambda4Runner`: `Run`, `RunLocal`, `SelfHosted` |
+| `Source/AWSLambda4D.Runner.pas` | `TAWSLambda4DRunner`: `Run`, `RunLocal`, `SelfHosted` |
 | `Source/AWSLambda4D.Runtime*.pas` | O loop, o cliente da Runtime API, um mock e o servidor local |
 | `Source/AWSLambda4D.HTTP.*.pas` | Tipos HTTP, adapter (API Gateway v1/v2), router, route matcher e o builder de evento v2 |
 | `Samples/` | `HelloLambda`, `APIHTTPLambda`, `APIHTTPRouterLambda`, além de `LocalLambda` e `MockLambda` |

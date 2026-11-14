@@ -46,7 +46,7 @@ procedure TAWSLambda4DRunnerTest.RunLocal_AnonymousFunction_ReceivesEventBody;
 var
   LBody: string;
 begin
-  TAWSLambda4Runner.RunLocal(
+  TAWSLambda4DRunner.RunLocal(
     function(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse
     begin
       LBody := ARequest.Body;
@@ -65,7 +65,7 @@ begin
   LCalled := False;
 
   // A falha do handler e reportada como erro da Lambda, nao como excecao do RunLocal.
-  TAWSLambda4Runner.RunLocal(
+  TAWSLambda4DRunner.RunLocal(
     function(const ARequest: TAWSLambda4DRequest; const AContext: TAWSLambda4DContext): TAWSLambda4DResponse
     begin
       LCalled := True;
@@ -80,7 +80,7 @@ procedure TAWSLambda4DRunnerTest.RunLocal_HTTPHandler_ReceivesRoutedRequest;
 var
   LPath: string;
 begin
-  TAWSLambda4Runner.RunLocal(
+  TAWSLambda4DRunner.RunLocal(
     TAWSLambda4DHTTPRouter.New.Get('/ping',
       function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
       begin
@@ -106,8 +106,8 @@ begin
       Result := TAWSLambda4DResponse.Create;
     end;
 
-  TAWSLambda4Runner.RunLocal(LHandler, '{}');
-  TAWSLambda4Runner.RunLocal(LHandler, '{}');
+  TAWSLambda4DRunner.RunLocal(LHandler, '{}');
+  TAWSLambda4DRunner.RunLocal(LHandler, '{}');
 
   Assert.AreEqual(2, LCalls);
 end;
@@ -136,7 +136,7 @@ begin
   LContext := TAWSLambda4DHTTPPayloadV2RequestContext.Create(LPayload);
   LContext.HTTP.Method('POST').Path('/documents/15');
 
-  TAWSLambda4Runner.RunLocal(LRouter, LPayload);
+  TAWSLambda4DRunner.RunLocal(LRouter, LPayload);
 
   Assert.AreEqual(15, LId);
   Assert.AreEqual('active', LQuery);
@@ -147,7 +147,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      TAWSLambda4Runner.RunLocal(TAWSLambda4DHTTPRouter.New, IAWSLambda4DHTTPPayloadV2(nil));
+      TAWSLambda4DRunner.RunLocal(TAWSLambda4DHTTPRouter.New, IAWSLambda4DHTTPPayloadV2(nil));
     end,
     EArgumentNilException);
 end;
@@ -156,7 +156,7 @@ procedure TAWSLambda4DRunnerTest.RunLocal_HTTPAnonymousFunctionWithEvent_Receive
 var
   LPath: string;
 begin
-  TAWSLambda4Runner.RunLocal(
+  TAWSLambda4DRunner.RunLocal(
     function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
     begin
       LPath := ARequest.Path;
@@ -173,7 +173,7 @@ var
   LMethod: string;
   LPath: string;
 begin
-  TAWSLambda4Runner.RunLocal(
+  TAWSLambda4DRunner.RunLocal(
     function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
     begin
       LMethod := ARequest.Method;
@@ -193,7 +193,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      TAWSLambda4Runner.RunLocal(TAWSLambda4DHTTPHandlerProc(nil), '{}');
+      TAWSLambda4DRunner.RunLocal(TAWSLambda4DHTTPHandlerProc(nil), '{}');
     end,
     EArgumentNilException);
 end;

@@ -14,7 +14,7 @@ var
 begin
   try
     LHttpHandler := TAPIHTTPHandler.Create;
-    TAWSLambda4Runner.Run(LHttpHandler);
+    TAWSLambda4DRunner.Run(LHttpHandler);
   except
     on E: Exception do
     begin

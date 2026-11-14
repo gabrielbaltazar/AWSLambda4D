@@ -8,7 +8,7 @@ uses
   AWSLambda4D.HTTP.Events;
 
 type
-  TAWSLambda4Runner = class
+  TAWSLambda4DRunner = class
   private
     class procedure RunLocalInvocation(const AHandler: IAWSLambda4DHandler; const AEvent: string;
       const APort: Integer); static;
@@ -84,9 +84,9 @@ begin
   Result := FProc(ARequest, AContext);
 end;
 
-{ TAWSLambda4Runner }
+{ TAWSLambda4DRunner }
 
-class procedure TAWSLambda4Runner.Run(const AHandler: IAWSLambda4DHTTPHandler; const AMaxInvocations: Integer = 0);
+class procedure TAWSLambda4DRunner.Run(const AHandler: IAWSLambda4DHTTPHandler; const AMaxInvocations: Integer = 0);
 var
   LAPI: IAWSLambda4DRuntimeAPI;
   LAdapter: IAWSLambda4DHandler;
@@ -104,7 +104,7 @@ begin
   end;
 end;
 
-class procedure TAWSLambda4Runner.Run(const AHandler: IAWSLambda4DHandler; const AMaxInvocations: Integer);
+class procedure TAWSLambda4DRunner.Run(const AHandler: IAWSLambda4DHandler; const AMaxInvocations: Integer);
 var
   LRuntimeAPI: IAWSLambda4DRuntimeAPI;
   LRuntime: TAWSLambda4DRuntime;
@@ -118,17 +118,17 @@ begin
   end;
 end;
 
-class procedure TAWSLambda4Runner.Run(const AHandler: TAWSLambda4DHandlerProc; const AMaxInvocations: Integer);
+class procedure TAWSLambda4DRunner.Run(const AHandler: TAWSLambda4DHandlerProc; const AMaxInvocations: Integer);
 begin
   Run(TAWSLambda4DProcHandler.New(AHandler), AMaxInvocations);
 end;
 
-class procedure TAWSLambda4Runner.Run(const AHandler: TAWSLambda4DHTTPHandlerProc; const AMaxInvocations: Integer);
+class procedure TAWSLambda4DRunner.Run(const AHandler: TAWSLambda4DHTTPHandlerProc; const AMaxInvocations: Integer);
 begin
   Run(TAWSLambda4DHTTPProcHandler.New(AHandler), AMaxInvocations);
 end;
 
-class procedure TAWSLambda4Runner.RunLocalInvocation(const AHandler: IAWSLambda4DHandler; const AEvent: string;
+class procedure TAWSLambda4DRunner.RunLocalInvocation(const AHandler: IAWSLambda4DHandler; const AEvent: string;
   const APort: Integer);
 var
   LServer: TAWSLambda4DRuntimeLocalServer;
@@ -167,7 +167,7 @@ begin
   end;
 end;
 
-class function TAWSLambda4Runner.SelfHosted: Boolean;
+class function TAWSLambda4DRunner.SelfHosted: Boolean;
 var
   LEnvironment: string;
 begin
@@ -176,7 +176,7 @@ begin
   Result := LEnvironment = '';
 end;
 
-class procedure TAWSLambda4Runner.RunLocal(const AHandler: IAWSLambda4DHandler; const AEvent: string;
+class procedure TAWSLambda4DRunner.RunLocal(const AHandler: IAWSLambda4DHandler; const AEvent: string;
   const APort: Integer);
 begin
   if SelfHosted then
@@ -185,19 +185,19 @@ begin
     Run(AHandler);
 end;
 
-class procedure TAWSLambda4Runner.RunLocal(const AHandler: TAWSLambda4DHandlerProc; const AEvent: string;
+class procedure TAWSLambda4DRunner.RunLocal(const AHandler: TAWSLambda4DHandlerProc; const AEvent: string;
   const APort: Integer);
 begin
   RunLocal(TAWSLambda4DProcHandler.New(AHandler), AEvent, APort);
 end;
 
-class procedure TAWSLambda4Runner.RunLocal(const AHandler: IAWSLambda4DHTTPHandler; const AEvent: string;
+class procedure TAWSLambda4DRunner.RunLocal(const AHandler: IAWSLambda4DHTTPHandler; const AEvent: string;
   const APort: Integer);
 begin
   RunLocal(TAWSLambda4DHTTPAdapter.New(AHandler), AEvent, APort);
 end;
 
-class procedure TAWSLambda4Runner.RunLocal(const AHandler: IAWSLambda4DHTTPHandler;
+class procedure TAWSLambda4DRunner.RunLocal(const AHandler: IAWSLambda4DHTTPHandler;
   const APayload: IAWSLambda4DHTTPPayloadV2; const APort: Integer);
 begin
   if APayload = nil then
@@ -206,13 +206,13 @@ begin
   RunLocal(AHandler, APayload.Content, APort);
 end;
 
-class procedure TAWSLambda4Runner.RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc; const AEvent: string;
+class procedure TAWSLambda4DRunner.RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc; const AEvent: string;
   const APort: Integer);
 begin
   RunLocal(TAWSLambda4DHTTPProcHandler.New(AHandler), AEvent, APort);
 end;
 
-class procedure TAWSLambda4Runner.RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc;
+class procedure TAWSLambda4DRunner.RunLocal(const AHandler: TAWSLambda4DHTTPHandlerProc;
   const APayload: IAWSLambda4DHTTPPayloadV2; const APort: Integer);
 begin
   RunLocal(TAWSLambda4DHTTPProcHandler.New(AHandler), APayload, APort);

@@ -22,15 +22,15 @@ begin
 
   // Fora da Lambda (AWS_LAMBDA_RUNTIME_API ausente), simula um POST /hook e imprime a resposta no console.
   // Troque a urlHook por um endpoint seu para ver o webhook chegando.
-  if TAWSLambda4Runner.SelfHosted then
-    TAWSLambda4Runner.RunLocal(LRouter,
+  if TAWSLambda4DRunner.SelfHosted then
+    TAWSLambda4DRunner.RunLocal(LRouter,
       TAWSLambda4DHTTPPayloadV2.New
         .AddHeader('content-type', 'application/json')
         .Body('{"urlHook":"https://httpbin.org/post","content":{"numero":123,"valor":150.5}}')
         .RequestContext.HTTP
           .Method('POST').Path('/hook').&End.&End)
   else
-    TAWSLambda4Runner.Run(LRouter);
+    TAWSLambda4DRunner.Run(LRouter);
 
   System.Readln;
 end.

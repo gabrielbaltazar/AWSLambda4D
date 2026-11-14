@@ -42,7 +42,7 @@ type
   IAWSLambda4DHandler = AWSLambda4D.Runtime.Interfaces.IAWSLambda4DHandler;
 
   // Runner
-  TAWSLambda4Runner = AWSLambda4D.Runner.TAWSLambda4Runner;
+  TAWSLambda4DRunner = AWSLambda4D.Runner.TAWSLambda4DRunner;
 
   TAWSLambda4D = class;
   TAWSLambda4DClass = class of TAWSLambda4D;
@@ -162,22 +162,22 @@ end;
 
 class procedure TAWSLambda4D.Run(const AMaxInvocations: Integer);
 begin
-  TAWSLambda4Runner.Run(Router, AMaxInvocations);
+  TAWSLambda4DRunner.Run(Router, AMaxInvocations);
 end;
 
 class procedure TAWSLambda4D.RunLocal(const APayload: IAWSLambda4DHTTPPayloadV2; const APort: Integer);
 begin
-  TAWSLambda4Runner.RunLocal(Router, APayload, APort);
+  TAWSLambda4DRunner.RunLocal(Router, APayload, APort);
 end;
 
 class procedure TAWSLambda4D.RunLocal(const AEvent: string; const APort: Integer);
 begin
-  TAWSLambda4Runner.RunLocal(Router, AEvent, APort);
+  TAWSLambda4DRunner.RunLocal(Router, AEvent, APort);
 end;
 
 class function TAWSLambda4D.SelfHosted: Boolean;
 begin
-  Result := TAWSLambda4Runner.SelfHosted;
+  Result := TAWSLambda4DRunner.SelfHosted;
 end;
 
 end.
