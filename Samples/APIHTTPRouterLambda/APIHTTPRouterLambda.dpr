@@ -8,6 +8,14 @@ uses
   System.SysUtils,
   AWSLambda4D;
 
+procedure MiddlewareLog(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse;
+  const ANext: TProc);
+begin
+  Writeln('-> ', ARequest.Method, ' ', ARequest.Path);
+  ANext();
+  Writeln('<- ', AResponse.StatusCode);
+end;
+
 begin
 {$IFDEF MSWINDOWS}
   IsConsole := False;
@@ -16,19 +24,13 @@ begin
 
   TAWSLambda4D
     // Middleware: roda antes e depois de toda rota (aqui, um log simples da requisicao).
-    .Use(
-      procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse;
-        const ANext: TProc)
-      begin
-        Writeln('-> ', ARequest.Method, ' ', ARequest.Path);
-        ANext();
-        Writeln('<- ', AResponse.StatusCode);
-      end)
+    .Use(MiddlewareLog)
     .Get('ping',
       procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
         AResponse.StatusCode := 200;
         AResponse.SetBody('{"message":"pong"}');
+        Writeln('Rota ping executada');
       end);
 
   // Fora da Lambda (AWS_LAMBDA_RUNTIME_API ausente), simula uma unica requisicao
