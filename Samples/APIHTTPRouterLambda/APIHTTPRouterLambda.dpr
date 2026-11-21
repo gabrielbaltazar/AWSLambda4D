@@ -15,11 +15,10 @@ begin
 {$ENDIF}
 
   TAWSLambda4D.Get('ping',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.StatusCode := 200;
-      Result.SetBody('{"message":"pong"}');
+      AResponse.StatusCode := 200;
+      AResponse.SetBody('{"message":"pong"}');
     end);
 
   // Fora da Lambda (AWS_LAMBDA_RUNTIME_API ausente), simula uma unica requisicao

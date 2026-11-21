@@ -109,8 +109,8 @@ type
     property IsBase64Encoded: Boolean read FIsBase64Encoded write FIsBase64Encoded;
   end;
 
-  TAWSLambda4DHTTPHandlerProc = reference to function(const ARequest: TAWSLambda4DHTTPRequest):
-    TAWSLambda4DHTTPResponse;
+  TAWSLambda4DHTTPHandlerProc = reference to procedure(const ARequest: TAWSLambda4DHTTPRequest;
+    const AResponse: TAWSLambda4DHTTPResponse);
 
   IAWSLambda4DHTTPHandler = interface
     ['{4A218098-9557-4D97-85F2-CAA6052FC9B1}']
@@ -311,7 +311,13 @@ end;
 
 function TAWSLambda4DHTTPProcHandler.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
 begin
-  Result := FProc(ARequest);
+  Result := TAWSLambda4DHTTPResponse.Create;
+  try
+    FProc(ARequest, Result);
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 { TAWSLambda4DHTTPResponse }

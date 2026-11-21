@@ -82,11 +82,10 @@ var
 begin
   TAWSLambda4DRunner.RunLocal(
     TAWSLambda4DHTTPRouter.New.Get('/ping',
-      function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+      procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
         LPath := ARequest.Path;
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('pong');
+        AResponse.SetBody('pong');
       end),
     '{"httpMethod":"GET","path":"/ping"}');
 
@@ -124,11 +123,10 @@ begin
   LQuery := '';
   LRouter := TAWSLambda4DHTTPRouter.New;
   LRouter.Post('/documents/:id',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
       LId := ARequest.PathParams.Field('id').AsInteger;
       LQuery := ARequest.QueryParam('status');
-      Result := TAWSLambda4DHTTPResponse.Create;
     end);
 
   LPayload := TAWSLambda4DHTTPPayloadV2.Create;
@@ -157,11 +155,10 @@ var
   LPath: string;
 begin
   TAWSLambda4DRunner.RunLocal(
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
       LPath := ARequest.Path;
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.SetBody('pong');
+      AResponse.SetBody('pong');
     end,
     '{"httpMethod":"GET","path":"/ping"}');
 
@@ -174,11 +171,10 @@ var
   LPath: string;
 begin
   TAWSLambda4DRunner.RunLocal(
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
       LMethod := ARequest.Method;
       LPath := ARequest.Path;
-      Result := TAWSLambda4DHTTPResponse.Create;
     end,
     TAWSLambda4DHTTPPayloadV2.New
       .RawPath('/items')

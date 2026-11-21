@@ -111,6 +111,10 @@ type
     [Test]
     procedure AnonymousHandler_NilFunction_RaisesException;
     [Test]
+    procedure AnonymousHandler_ResponseArrivesCreatedWithStatus200;
+    [Test]
+    procedure AnonymousHandler_Raises_ExceptionPropagatesAndResponseIsFreed;
+    [Test]
     procedure AnonymousHandler_ConvertError_PropagatesBadRequest;
   end;
 
@@ -659,30 +663,25 @@ var
   LResponse: TAWSLambda4DHTTPResponse;
 begin
   FRouter
-    .Get('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    .Get('/r', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('GET');
+        AResponse.SetBody('GET');
       end)
-    .Post('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    .Post('/r', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('POST');
+        AResponse.SetBody('POST');
       end)
-    .Put('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    .Put('/r', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('PUT');
+        AResponse.SetBody('PUT');
       end)
-    .Delete('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    .Delete('/r', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('DELETE');
+        AResponse.SetBody('DELETE');
       end)
-    .Patch('/r', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    .Patch('/r', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('PATCH');
+        AResponse.SetBody('PATCH');
       end);
 
   for LMethod in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] do
@@ -701,10 +700,9 @@ var
   LResponse: TAWSLambda4DHTTPResponse;
 begin
   FRouter.Add('OPTIONS', '/r',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.SetBody('options');
+      AResponse.SetBody('options');
     end);
 
   LResponse := SendRequest('OPTIONS', '/r');
@@ -720,10 +718,9 @@ var
   LResponse: TAWSLambda4DHTTPResponse;
 begin
   FRouter.Get('/users/:id',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.SetBody(IntToStr(ARequest.PathParams.Field('id').AsInteger));
+      AResponse.SetBody(IntToStr(ARequest.PathParams.Field('id').AsInteger));
     end);
 
   LResponse := SendRequest('GET', '/users/15');
@@ -741,10 +738,9 @@ var
 begin
   LCalls := 0;
   FRouter.Get('/count',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
       Inc(LCalls);
-      Result := TAWSLambda4DHTTPResponse.Create;
     end);
 
   SendRequest('GET', '/count').Free;
@@ -760,10 +756,9 @@ var
 begin
   FRouter
     .Get('/a', TStubHandler.Create('interface'))
-    .Get('/b', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    .Get('/b', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('anonymous');
+        AResponse.SetBody('anonymous');
       end);
 
   LResponse := SendRequest('GET', '/a');
@@ -789,9 +784,8 @@ begin
     procedure
     begin
       FRouter.Get('/PING',
-        function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+        procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
         begin
-          Result := TAWSLambda4DHTTPResponse.Create;
         end);
     end,
     EArgumentException);
@@ -807,13 +801,55 @@ begin
     EArgumentNilException);
 end;
 
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_ResponseArrivesCreatedWithStatus200;
+var
+  LArrived: Boolean;
+  LStatusOnArrival: Integer;
+  LResponse: TAWSLambda4DHTTPResponse;
+begin
+  LArrived := False;
+  LStatusOnArrival := 0;
+  FRouter.Get('/r',
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
+    begin
+      LArrived := AResponse <> nil;
+      LStatusOnArrival := AResponse.StatusCode;
+      AResponse.SetBody('x');
+    end);
+
+  LResponse := SendRequest('GET', '/r');
+  try
+    Assert.IsTrue(LArrived);
+    Assert.AreEqual(200, LStatusOnArrival);
+    Assert.AreEqual('x', BodyOf(LResponse));
+  finally
+    LResponse.Free;
+  end;
+end;
+
+procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_Raises_ExceptionPropagatesAndResponseIsFreed;
+begin
+  // O teste falha por vazamento (DUnitX) se o response criado pelo wrapper nao for liberado.
+  FRouter.Get('/r',
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
+    begin
+      raise EInvalidOp.Create('boom');
+    end);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      SendRequest('GET', '/r').Free;
+    end,
+    EInvalidOp);
+end;
+
 procedure TAWSLambda4DHTTPRouterTest.AnonymousHandler_ConvertError_PropagatesBadRequest;
 begin
   FRouter.Get('/users/:id',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.SetBody(IntToStr(ARequest.PathParams.Field('id').AsInteger));
+      AResponse.SetBody(IntToStr(ARequest.PathParams.Field('id').AsInteger));
     end);
 
   Assert.WillRaise(

@@ -82,11 +82,10 @@ end;
 function TAWSLambda4DStaticApiTest.OkHandler(const ATag: string): TAWSLambda4DHTTPHandlerProc;
 begin
   Result :=
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.StatusCode := 200;
-      Result.SetBody(ATag);
+      AResponse.StatusCode := 200;
+      AResponse.SetBody(ATag);
     end;
 end;
 
@@ -186,12 +185,11 @@ var
 begin
   LId := 0;
   TAWSLambda4D.Post('/documents/:id',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
       LPath := ARequest.Path;
       LId := ARequest.PathParams.Field('id').AsInteger;
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.StatusCode := 204;
+      AResponse.StatusCode := 204;
     end);
 
   TAWSLambda4D.RunLocal(
@@ -209,10 +207,9 @@ var
 begin
   LCalled := False;
   TAWSLambda4D.Get('/ping',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
       LCalled := True;
-      Result := TAWSLambda4DHTTPResponse.Create;
     end);
 
   TAWSLambda4D.RunLocal('{"httpMethod":"GET","path":"/ping"}');

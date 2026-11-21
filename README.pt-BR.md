@@ -261,16 +261,20 @@ end.
 
 ```pascal
 TAWSLambda4DRunner.Run(
-  function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+  procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
   begin
-    Result := TAWSLambda4DHTTPResponse.Create;
-    Result.StatusCode := 201;
-    Result.Headers.Add('content-type', 'application/json; charset=utf-8');
-    Result.SetBody('{"timezone":"UTC"}');
+    AResponse.StatusCode := 201;
+    AResponse.Headers.Add('content-type', 'application/json; charset=utf-8');
+    AResponse.SetBody('{"timezone":"UTC"}');
   end);
 ```
 
-O `RunLocal` aceita a mesma função nas execuções locais, com uma string de evento ou com o builder de payload.
+A função anônima HTTP é uma **procedure**: a biblioteca cria o objeto `AResponse` para você (status `200` por padrão) e
+você só o preenche; não há nada para criar nem devolver. Se a procedure lançar uma exceção, o response é liberado e a
+exceção segue o tratamento HTTP habitual. (O `TAWSLambda4DHandlerProc`, que não é HTTP, é diferente: é uma função que
+devolve um novo `TAWSLambda4DResponse`.)
+
+O `RunLocal` aceita a mesma procedure nas execuções locais, com uma string de evento ou com o builder de payload.
 
 ### APIHTTPRouterLambda: um router
 
@@ -285,11 +289,10 @@ var
 begin
   LRouter := TAWSLambda4DHTTPRouter.New;
   LRouter.Get('ping',
-    function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.StatusCode := 200;
-      Result.SetBody('{"message":"pong"}');
+      AResponse.StatusCode := 200;
+      AResponse.SetBody('{"message":"pong"}');
     end);
 
   if TAWSLambda4DRunner.SelfHosted then
@@ -330,10 +333,9 @@ end;
 
 ```pascal
 LRouter
-  .Get('/ping', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+  .Get('/ping', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
     begin
-      Result := TAWSLambda4DHTTPResponse.Create;
-      Result.SetBody('{"message":"pong"}');
+      AResponse.SetBody('{"message":"pong"}');
     end)
   .Get('/ping/:id/:numero', TPingHandler.New);
 ```
@@ -364,10 +366,9 @@ uses
 
 begin
   TAWSLambda4D
-    .Get('/ping', function(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse
+    .Get('/ping', procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
       begin
-        Result := TAWSLambda4DHTTPResponse.Create;
-        Result.SetBody('{"message":"pong"}');
+        AResponse.SetBody('{"message":"pong"}');
       end)
     .Post('/ping', TPingPostHandler.New)          // classes também funcionam
     .Run;                                         // no AWS Lambda
