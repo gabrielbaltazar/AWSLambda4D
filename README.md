@@ -490,7 +490,7 @@ These are the standard steps for any AWS custom runtime; the library does not ad
 | `Source/AWSLambda4D.Runner.pas` | `TAWSLambda4DRunner`: `Run`, `RunLocal`, `SelfHosted` |
 | `Source/AWSLambda4D.Runtime*.pas` | The loop, the Runtime API client, a mock and the local server |
 | `Source/AWSLambda4D.HTTP.*.pas` | HTTP types, adapter (API Gateway v1/v2), router, route matcher and the v2 event builder |
-| `Samples/` | `HelloLambda`, `APIHTTPLambda`, `APIHTTPRouterLambda`, plus `LocalLambda` and `MockLambda` |
+| `Samples/` | `HelloLambda`, `APIHTTPLambda`, `APIHTTPRouterLambda`, `APIHTTPCrud` (in-memory CRUD with GET/POST/PUT/DELETE), plus `LocalLambda` and `MockLambda` |
 | `Test/` | DUnitX test project |
 
 ## Tests
