@@ -388,6 +388,38 @@ TAWSLambda4D
 function and behave like the router methods above. `TAWSLambda4D.Router` returns the underlying router and
 `TAWSLambda4D.Reset` discards the registered routes (useful in tests). Inside Lambda, `RunLocal` behaves like `Run`.
 
+### Middlewares
+
+A middleware runs **before and/or after** the route, like in Horse and other HTTP frameworks. Register it with `Use`
+(on `TAWSLambda4D` or on a router); it receives the request, the response and a `ANext` procedure that runs the next step
+of the chain (the next middleware and, in the end, the route):
+
+```pascal
+TAWSLambda4D
+  .Use(
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse;
+      const ANext: TProc)
+    begin
+      Writeln('-> ', ARequest.Method, ' ', ARequest.Path);      // before the route
+      ANext();                                                  // runs the route
+      AResponse.Headers.Add('access-control-allow-origin', '*'); // after the route
+    end)
+  .Get('/ping', LPingHandler)
+  .Run;
+```
+
+- Middlewares run in the order they were registered: with `Use(A).Use(B)` the order is `A before, B before, route,
+  B after, A after`.
+- **Not calling `ANext`** stops the chain: the route is not executed and the middleware's own `AResponse` is returned.
+  This is how you answer `401` in an authentication middleware.
+- The "after" part sees the final response, including the `404`/`405` produced by the router when no route matches.
+- Middlewares run before routing, so `ARequest.PathParams` is only filled after `ANext`.
+- An exception raised by a middleware or by the route propagates as usual (`500`, or `400` for a typed parameter error);
+  the "after" part is skipped.
+- A middleware can also be a class that implements `IAWSLambda4DHTTPMiddleware` (`procedure Execute(ARequest, AResponse,
+  ANext)`), passed to the same `Use`.
+- Middlewares are global; they run for every route registered on that router.
+
 ## Reading request data with types
 
 `PathParams`, `QueryParams` and `Headers` offer `First('name')`, which returns the raw string, and `Field('name')`,

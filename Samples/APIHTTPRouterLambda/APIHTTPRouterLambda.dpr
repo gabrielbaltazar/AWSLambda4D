@@ -14,12 +14,22 @@ begin
   ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
 
-  TAWSLambda4D.Get('ping',
-    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
-    begin
-      AResponse.StatusCode := 200;
-      AResponse.SetBody('{"message":"pong"}');
-    end);
+  TAWSLambda4D
+    // Middleware: roda antes e depois de toda rota (aqui, um log simples da requisicao).
+    .Use(
+      procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse;
+        const ANext: TProc)
+      begin
+        Writeln('-> ', ARequest.Method, ' ', ARequest.Path);
+        ANext();
+        Writeln('<- ', AResponse.StatusCode);
+      end)
+    .Get('ping',
+      procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse)
+      begin
+        AResponse.StatusCode := 200;
+        AResponse.SetBody('{"message":"pong"}');
+      end);
 
   // Fora da Lambda (AWS_LAMBDA_RUNTIME_API ausente), simula uma unica requisicao
   // do API Gateway (HTTP API, payload v2) e imprime a resposta no console.

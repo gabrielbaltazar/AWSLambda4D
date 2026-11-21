@@ -106,6 +106,7 @@
         <DCCReference Include="Source\AWSLambda4D.HTTP.Events.Test.pas"/>
         <DCCReference Include="Source\AWSLambda4D.Test.pas"/>
         <DCCReference Include="Source\AWSLambda4D.Runtime.API.Test.pas"/>
+        <DCCReference Include="Source\AWSLambda4D.HTTP.Middleware.Test.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

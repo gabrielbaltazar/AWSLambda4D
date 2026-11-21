@@ -101,6 +101,8 @@ type
     destructor Destroy; override;
 
     procedure SetBody(const AValue: string);
+    // Copia status, cabecalhos, cookies, corpo e IsBase64Encoded de outro response.
+    procedure Assign(const ASource: TAWSLambda4DHTTPResponse);
 
     property StatusCode: Integer read FStatusCode write FStatusCode;
     property Headers: TAWSLambda4DHTTPValues read FHeaders;
@@ -115,6 +117,30 @@ type
   IAWSLambda4DHTTPHandler = interface
     ['{4A218098-9557-4D97-85F2-CAA6052FC9B1}']
     function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+  end;
+
+  // Middleware HTTP: roda antes e/ou depois da rota. Chamar ANext executa o proximo passo da cadeia
+  // (o proximo middleware ou, por fim, a rota); nao chamar interrompe a cadeia (ex.: 401).
+  // Os middlewares rodam antes do roteamento: ARequest.PathParams so e preenchido depois de ANext.
+  TAWSLambda4DHTTPMiddlewareProc = reference to procedure(const ARequest: TAWSLambda4DHTTPRequest;
+    const AResponse: TAWSLambda4DHTTPResponse; const ANext: TProc);
+
+  IAWSLambda4DHTTPMiddleware = interface
+    ['{73BC3429-BAA5-4F1C-AEB6-540405208225}']
+    procedure Execute(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse;
+      const ANext: TProc);
+  end;
+
+  // Adapta uma funcao anonima para IAWSLambda4DHTTPMiddleware.
+  TAWSLambda4DHTTPProcMiddleware = class(TInterfacedObject, IAWSLambda4DHTTPMiddleware)
+  private
+    FProc: TAWSLambda4DHTTPMiddlewareProc;
+  protected
+    procedure Execute(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse;
+      const ANext: TProc);
+  public
+    constructor Create(const AProc: TAWSLambda4DHTTPMiddlewareProc);
+    class function New(const AProc: TAWSLambda4DHTTPMiddlewareProc): IAWSLambda4DHTTPMiddleware;
   end;
 
   // Adapta uma funcao anonima para IAWSLambda4DHTTPHandler.
@@ -145,6 +171,9 @@ type
     function Put(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
     function Delete(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
     function Patch(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    // Adiciona um middleware global; sao executados na ordem em que foram registrados.
+    function Use(const AMiddleware: IAWSLambda4DHTTPMiddleware): IAWSLambda4DHTTPRouter; overload;
+    function Use(const AMiddleware: TAWSLambda4DHTTPMiddlewareProc): IAWSLambda4DHTTPRouter; overload;
   end;
 
   TAWSLambda4DHTTPValues = class
@@ -156,6 +185,8 @@ type
 
     procedure Add(const AName, AValue: string);
     procedure SetValue(const AName, AValue: string);
+    // Substitui o conteudo por uma copia dos valores de outra instancia.
+    procedure Assign(const ASource: TAWSLambda4DHTTPValues);
     procedure Clear;
     function Contains(const AName: string): Boolean;
     function ValueCount(const AName: string): Integer;
@@ -320,6 +351,27 @@ begin
   end;
 end;
 
+{ TAWSLambda4DHTTPProcMiddleware }
+
+constructor TAWSLambda4DHTTPProcMiddleware.Create(const AProc: TAWSLambda4DHTTPMiddlewareProc);
+begin
+  if not Assigned(AProc) then
+    raise EArgumentNilException.Create('AMiddleware');
+  inherited Create;
+  FProc := AProc;
+end;
+
+class function TAWSLambda4DHTTPProcMiddleware.New(const AProc: TAWSLambda4DHTTPMiddlewareProc): IAWSLambda4DHTTPMiddleware;
+begin
+  Result := Self.Create(AProc);
+end;
+
+procedure TAWSLambda4DHTTPProcMiddleware.Execute(const ARequest: TAWSLambda4DHTTPRequest;
+  const AResponse: TAWSLambda4DHTTPResponse; const ANext: TProc);
+begin
+  FProc(ARequest, AResponse, ANext);
+end;
+
 { TAWSLambda4DHTTPResponse }
 
 constructor TAWSLambda4DHTTPResponse.Create;
@@ -334,6 +386,19 @@ begin
   FHeaders.Free;
   FCookies.Free;
   inherited;
+end;
+
+procedure TAWSLambda4DHTTPResponse.Assign(const ASource: TAWSLambda4DHTTPResponse);
+begin
+  if ASource = nil then
+    raise EArgumentNilException.Create('ASource');
+
+  FStatusCode := ASource.FStatusCode;
+  FIsBase64Encoded := ASource.FIsBase64Encoded;
+  FBody := Copy(ASource.FBody);
+  FHeaders.Assign(ASource.FHeaders);
+  FCookies.Clear;
+  FCookies.AddRange(ASource.FCookies);
 end;
 
 procedure TAWSLambda4DHTTPResponse.SetBody(const AValue: string);
@@ -408,6 +473,17 @@ begin
   end;
 
   LValues.Add(AValue);
+end;
+
+procedure TAWSLambda4DHTTPValues.Assign(const ASource: TAWSLambda4DHTTPValues);
+var
+  LName: string;
+  LIndex: Integer;
+begin
+  Clear;
+  for LName in ASource.Names do
+    for LIndex := 0 to ASource.ValueCount(LName) - 1 do
+      Add(LName, ASource.Value(LName, LIndex));
 end;
 
 procedure TAWSLambda4DHTTPValues.Clear;

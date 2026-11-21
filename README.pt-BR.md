@@ -391,6 +391,38 @@ TAWSLambda4D
 função anônima e se comportam como os métodos do router acima. `TAWSLambda4D.Router` devolve o router interno e
 `TAWSLambda4D.Reset` descarta as rotas registradas (útil em testes). Dentro do Lambda, `RunLocal` se comporta como `Run`.
 
+### Middlewares
+
+Um middleware roda **antes e/ou depois** da rota, como no Horse e em outros frameworks HTTP. Registre-o com `Use` (na
+`TAWSLambda4D` ou em um router); ele recebe a requisição, a resposta e uma procedure `ANext` que executa o próximo passo
+da cadeia (o próximo middleware e, no fim, a rota):
+
+```pascal
+TAWSLambda4D
+  .Use(
+    procedure(const ARequest: TAWSLambda4DHTTPRequest; const AResponse: TAWSLambda4DHTTPResponse;
+      const ANext: TProc)
+    begin
+      Writeln('-> ', ARequest.Method, ' ', ARequest.Path);      // antes da rota
+      ANext();                                                  // executa a rota
+      AResponse.Headers.Add('access-control-allow-origin', '*'); // depois da rota
+    end)
+  .Get('/ping', LPingHandler)
+  .Run;
+```
+
+- Os middlewares rodam na ordem em que foram registrados: com `Use(A).Use(B)` a ordem é `A antes, B antes, rota,
+  B depois, A depois`.
+- **Não chamar `ANext`** interrompe a cadeia: a rota não é executada e o `AResponse` do próprio middleware é devolvido.
+  É assim que um middleware de autenticação responde `401`.
+- A parte "depois" enxerga a resposta final, inclusive o `404`/`405` que o router gera quando nenhuma rota casa.
+- Os middlewares rodam antes do roteamento; por isso `ARequest.PathParams` só é preenchido depois de `ANext`.
+- Uma exceção lançada por um middleware ou pela rota se propaga normalmente (`500`, ou `400` para erro de parâmetro
+  tipado); a parte "depois" é ignorada.
+- Um middleware também pode ser uma classe que implementa `IAWSLambda4DHTTPMiddleware` (`procedure Execute(ARequest,
+  AResponse, ANext)`), passada ao mesmo `Use`.
+- Os middlewares são globais: rodam para todas as rotas registradas naquele router.
+
 ## Lendo dados da requisição com tipos
 
 `PathParams`, `QueryParams` e `Headers` oferecem `First('nome')`, que devolve a string bruta, e `Field('nome')`, que

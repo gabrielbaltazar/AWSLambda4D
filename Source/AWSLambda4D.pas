@@ -17,6 +17,10 @@ type
   // HTTP
   TAWSLambda4DHTTPHandlerProc = AWSLambda4D.HTTP.Types.TAWSLambda4DHTTPHandlerProc;
 
+  TAWSLambda4DHTTPMiddlewareProc = AWSLambda4D.HTTP.Types.TAWSLambda4DHTTPMiddlewareProc;
+
+  IAWSLambda4DHTTPMiddleware = AWSLambda4D.HTTP.Types.IAWSLambda4DHTTPMiddleware;
+
   IAWSLambda4DHTTPHandler = AWSLambda4D.HTTP.Types.IAWSLambda4DHTTPHandler;
 
   IAWSLambda4DHTTPRouter = AWSLambda4D.HTTP.Types.IAWSLambda4DHTTPRouter;
@@ -54,6 +58,10 @@ type
     class function Router: IAWSLambda4DHTTPRouter;
     // Descarta as rotas registradas (util em testes).
     class procedure Reset;
+
+    // Middlewares globais: rodam antes e/ou depois da rota, na ordem de registro.
+    class function Use(const AMiddleware: IAWSLambda4DHTTPMiddleware): TAWSLambda4DClass; overload;
+    class function Use(const AMiddleware: TAWSLambda4DHTTPMiddlewareProc): TAWSLambda4DClass; overload;
 
     class function Add(const AMethod: string; const APath: string;
       const AHandler: IAWSLambda4DHTTPHandler): TAWSLambda4DClass; overload;
@@ -94,6 +102,18 @@ end;
 class procedure TAWSLambda4D.Reset;
 begin
   FRouter := nil;
+end;
+
+class function TAWSLambda4D.Use(const AMiddleware: IAWSLambda4DHTTPMiddleware): TAWSLambda4DClass;
+begin
+  Result := Self;
+  Router.Use(AMiddleware);
+end;
+
+class function TAWSLambda4D.Use(const AMiddleware: TAWSLambda4DHTTPMiddlewareProc): TAWSLambda4DClass;
+begin
+  Result := Self;
+  Router.Use(AMiddleware);
 end;
 
 class function TAWSLambda4D.Add(const AMethod: string; const APath: string;

@@ -23,7 +23,8 @@ uses
   AWSLambda4D.Runner.Test in 'Source\AWSLambda4D.Runner.Test.pas',
   AWSLambda4D.HTTP.Events.Test in 'Source\AWSLambda4D.HTTP.Events.Test.pas',
   AWSLambda4D.Test in 'Source\AWSLambda4D.Test.pas',
-  AWSLambda4D.Runtime.API.Test in 'Source\AWSLambda4D.Runtime.API.Test.pas';
+  AWSLambda4D.Runtime.API.Test in 'Source\AWSLambda4D.Runtime.API.Test.pas',
+  AWSLambda4D.HTTP.Middleware.Test in 'Source\AWSLambda4D.HTTP.Middleware.Test.pas';
 
 { keep comment here to protect the following conditional from being removed by the IDE when adding a unit }
 {$IFNDEF TESTINSIGHT}

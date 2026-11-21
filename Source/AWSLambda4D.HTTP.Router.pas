@@ -27,7 +27,11 @@ type
   TAWSLambda4DHTTPRouter = class(TInterfacedObject, IAWSLambda4DHTTPRouter)
   private
     FRoutes: TObjectList<TAWSLambda4DHTTPRoute>;
+    FMiddlewares: TList<IAWSLambda4DHTTPMiddleware>;
 
+    function ExecuteRoute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+    procedure RunMiddleware(const AIndex: Integer; const ARequest: TAWSLambda4DHTTPRequest;
+      const AResponse: TAWSLambda4DHTTPResponse);
     procedure RegisterRoute(const AMethod: string; const APath: string; const AHandler: IAWSLambda4DHTTPHandler);
     function CreateErrorResponse(const AStatusCode: Integer; const AMessage: string): TAWSLambda4DHTTPResponse;
   public
@@ -49,6 +53,8 @@ type
     function Put(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
     function Delete(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
     function Patch(const APath: string; const AHandler: TAWSLambda4DHTTPHandlerProc): IAWSLambda4DHTTPRouter; overload;
+    function Use(const AMiddleware: IAWSLambda4DHTTPMiddleware): IAWSLambda4DHTTPRouter; overload;
+    function Use(const AMiddleware: TAWSLambda4DHTTPMiddlewareProc): IAWSLambda4DHTTPRouter; overload;
     function Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
   end;
 
@@ -75,10 +81,12 @@ constructor TAWSLambda4DHTTPRouter.Create;
 begin
   inherited Create;
   FRoutes := TObjectList<TAWSLambda4DHTTPRoute>.Create(True);
+  FMiddlewares := TList<IAWSLambda4DHTTPMiddleware>.Create;
 end;
 
 destructor TAWSLambda4DHTTPRouter.Destroy;
 begin
+  FMiddlewares.Free;
   FRoutes.Free;
   inherited;
 end;
@@ -214,7 +222,59 @@ begin
   Result := Add('PATCH', APath, AHandler);
 end;
 
+function TAWSLambda4DHTTPRouter.Use(const AMiddleware: IAWSLambda4DHTTPMiddleware): IAWSLambda4DHTTPRouter;
+begin
+  if AMiddleware = nil then
+    raise EArgumentNilException.Create('AMiddleware');
+
+  Result := Self;
+  FMiddlewares.Add(AMiddleware);
+end;
+
+function TAWSLambda4DHTTPRouter.Use(const AMiddleware: TAWSLambda4DHTTPMiddlewareProc): IAWSLambda4DHTTPRouter;
+begin
+  Result := Use(TAWSLambda4DHTTPProcMiddleware.New(AMiddleware));
+end;
+
+procedure TAWSLambda4DHTTPRouter.RunMiddleware(const AIndex: Integer; const ARequest: TAWSLambda4DHTTPRequest;
+  const AResponse: TAWSLambda4DHTTPResponse);
+var
+  LRouteResponse: TAWSLambda4DHTTPResponse;
+begin
+  if AIndex >= FMiddlewares.Count then
+  begin
+    // Fim da cadeia: executa a rota e coloca o resultado no response compartilhado com os middlewares.
+    LRouteResponse := ExecuteRoute(ARequest);
+    try
+      AResponse.Assign(LRouteResponse);
+    finally
+      LRouteResponse.Free;
+    end;
+    Exit;
+  end;
+
+  FMiddlewares[AIndex].Execute(ARequest, AResponse,
+    procedure
+    begin
+      RunMiddleware(AIndex + 1, ARequest, AResponse);
+    end);
+end;
+
 function TAWSLambda4DHTTPRouter.Execute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
+begin
+  if FMiddlewares.Count = 0 then
+    Exit(ExecuteRoute(ARequest));
+
+  Result := TAWSLambda4DHTTPResponse.Create;
+  try
+    RunMiddleware(0, ARequest, Result);
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function TAWSLambda4DHTTPRouter.ExecuteRoute(const ARequest: TAWSLambda4DHTTPRequest): TAWSLambda4DHTTPResponse;
 var
   LRoute: TAWSLambda4DHTTPRoute;
   LBestRoute: TAWSLambda4DHTTPRoute;
